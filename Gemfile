@@ -62,4 +62,5 @@ group :test do
   gem "webmock"
   gem "vcr"
   gem "mocha"
+  gem "factory_bot_rails", "~> 6.5"
 end

@@ -41,7 +41,7 @@ module ActiveSupport
     parallelize(workers: :number_of_processors)
 
     include ActiveJob::TestHelper
-    include ActionTextTestHelper, CardTestHelper, ChangeTestHelper, SessionTestHelper
+    include ActionTextTestHelper, CardTestHelper, ChangeTestHelper, SessionTestHelper, FactoryTestHelper
     include Turbo::Broadcastable::TestHelper
 
     setup do
