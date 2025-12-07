@@ -1,98 +1,117 @@
 require "test_helper"
 
 class User::RoleTest < ActiveSupport::TestCase
-  test "can administer others?" do
-    assert users(:kevin).can_administer?(users(:jz))
+  setup do
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    create(:user, :system, account: @account)
+    @jason = create(:user, :jason, account: @account)
+    @kevin = create(:user, :kevin, account: @account)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @jz = create(:user, :jz, account: @account)
+  end
 
-    assert_not users(:kevin).can_administer?(users(:kevin))
-    assert_not users(:jz).can_administer?(users(:kevin))
+  test "can administer others?" do
+    assert @kevin.can_administer?(@jz)
+
+    assert_not @kevin.can_administer?(@kevin)
+    assert_not @jz.can_administer?(@kevin)
   end
 
   test "owner can administer admins and members" do
-    assert users(:jason).can_administer?(users(:kevin))
-    assert users(:jason).can_administer?(users(:david))
-    assert users(:jason).can_administer?(users(:jz))
+    assert @jason.can_administer?(@kevin)
+    assert @jason.can_administer?(@david)
+    assert @jason.can_administer?(@jz)
   end
 
   test "owner cannot administer themselves" do
-    assert_not users(:jason).can_administer?(users(:jason))
+    assert_not @jason.can_administer?(@jason)
   end
 
   test "admin cannot administer the owner" do
-    assert_not users(:kevin).can_administer?(users(:jason))
+    assert_not @kevin.can_administer?(@jason)
   end
 
   test "owner is included in active scope" do
+    system_user = @account.users.find_by(role: :system)
     active_users = User.active
-    assert_includes active_users, users(:jason)
-    assert_includes active_users, users(:kevin)
-    assert_includes active_users, users(:david)
-    assert_not_includes active_users, users(:system)
+    assert_includes active_users, @jason
+    assert_includes active_users, @kevin
+    assert_includes active_users, @david
+    assert_not_includes active_users, system_user
   end
 
   test "owner is also considered an admin" do
-    assert users(:jason).owner?
-    assert users(:jason).admin?
+    assert @jason.owner?
+    assert @jason.admin?
 
-    assert users(:kevin).admin?
-    assert_not users(:kevin).owner?
+    assert @kevin.admin?
+    assert_not @kevin.owner?
   end
 
   test "owner scope returns only active owners" do
-    owners = accounts("37s").users.owner
-    assert_includes owners, users(:jason)
-    assert_not_includes owners, users(:kevin)
-    assert_not_includes owners, users(:david)
+    owners = @account.users.owner
+    assert_includes owners, @jason
+    assert_not_includes owners, @kevin
+    assert_not_includes owners, @david
 
-    users(:jason).update!(active: false)
-    assert_not_includes accounts("37s").users.owner, users(:jason)
+    @jason.update!(active: false)
+    assert_not_includes @account.users.owner, @jason
   end
 
   test "admin scope returns active owners and admins" do
-    admins = accounts("37s").users.admin
-    assert_includes admins, users(:jason)
-    assert_includes admins, users(:kevin)
-    assert_not_includes admins, users(:david)
+    admins = @account.users.admin
+    assert_includes admins, @jason
+    assert_includes admins, @kevin
+    assert_not_includes admins, @david
 
-    users(:kevin).update!(active: false)
-    assert_not_includes accounts("37s").users.admin, users(:kevin)
+    @kevin.update!(active: false)
+    assert_not_includes @account.users.admin, @kevin
   end
 
   test "can administer board?" do
-    writebook_board = boards(:writebook)
-    private_board = boards(:private)
+    writebook_board = create(:board, :writebook, account: @account, creator: @david)
+    private_board = create(:board, :private, account: @account, creator: @kevin)
 
     # Admin can administer any board
-    assert users(:kevin).can_administer_board?(writebook_board)
-    assert users(:kevin).can_administer_board?(private_board)
+    assert @kevin.can_administer_board?(writebook_board)
+    assert @kevin.can_administer_board?(private_board)
 
     # Creator can administer their own board
-    assert users(:david).can_administer_board?(writebook_board)
+    assert @david.can_administer_board?(writebook_board)
 
     # Regular user cannot administer boards they didn't create
-    assert_not users(:jz).can_administer_board?(writebook_board)
-    assert_not users(:jz).can_administer_board?(private_board)
+    assert_not @jz.can_administer_board?(writebook_board)
+    assert_not @jz.can_administer_board?(private_board)
 
     # Creator cannot administer other people's boards
-    assert_not users(:david).can_administer_board?(private_board)
+    assert_not @david.can_administer_board?(private_board)
   end
 
   test "can administer card?" do
-    logo_card = cards(:logo)
-    text_card = cards(:text)
+    writebook_board = create(:board, :writebook, account: @account, creator: @david)
+    column = create(:column, :writebook_triage, account: @account, board: writebook_board)
+
+    logo_card = nil
+    text_card = nil
+    with_current_user(@david) do
+      logo_card = create(:card, :logo, account: @account, board: writebook_board, column: column, creator: @david)
+      text_card = create(:card, :text, account: @account, board: writebook_board, column: column, creator: @kevin)
+    end
 
     # Admin can administer any card
-    assert users(:kevin).can_administer_card?(logo_card)
-    assert users(:kevin).can_administer_card?(text_card)
+    assert @kevin.can_administer_card?(logo_card)
+    assert @kevin.can_administer_card?(text_card)
 
     # Creator can administer their own card
-    assert users(:david).can_administer_card?(logo_card)
+    assert @david.can_administer_card?(logo_card)
 
     # Regular user cannot administer cards they didn't create
-    assert_not users(:jz).can_administer_card?(logo_card)
-    assert_not users(:jz).can_administer_card?(text_card)
+    assert_not @jz.can_administer_card?(logo_card)
+    assert_not @jz.can_administer_card?(text_card)
 
     # Creator cannot administer other people's cards
-    assert_not users(:david).can_administer_card?(text_card)
+    assert_not @david.can_administer_card?(text_card)
   end
 end

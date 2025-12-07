@@ -1,12 +1,14 @@
 require "test_helper"
 
 class Cards::PublishesControllerTest < ActionDispatch::IntegrationTest
-  setup do
-    sign_in_as :kevin
-  end
-
   test "create" do
-    card = cards(:logo)
+    account = Current.account
+    board = create(:board, :writebook, account: account)
+    column = create(:column, :writebook_triage, board: board, account: account)
+    kevin = create(:user, :kevin, account: account)
+    card = create(:card, :logo, board: board, column: column, account: account)
+
+    sign_in_as kevin
     card.drafted!
 
     assert_changes -> { card.reload.published? }, from: false, to: true do
@@ -17,7 +19,13 @@ class Cards::PublishesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create and add another" do
-    card = cards(:logo)
+    account = Current.account
+    board = create(:board, :writebook, account: account)
+    column = create(:column, :writebook_triage, board: board, account: account)
+    kevin = create(:user, :kevin, account: account)
+    card = create(:card, :logo, board: board, column: column, account: account)
+
+    sign_in_as kevin
     card.drafted!
 
     assert_changes -> { card.reload.published? }, from: false, to: true do

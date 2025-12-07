@@ -1,8 +1,16 @@
 require "test_helper"
 
 class WebhookTest < ActiveSupport::TestCase
+  setup do
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+  end
+
   test "create" do
-    webhook = Webhook.create! name: "Test", url: "https://example.com/webhook", board: boards(:writebook)
+    webhook = Webhook.create! name: "Test", url: "https://example.com/webhook", board: @board
     assert webhook.persisted?
     assert webhook.active?
     assert webhook.signing_secret.present?
@@ -10,35 +18,35 @@ class WebhookTest < ActiveSupport::TestCase
   end
 
   test "validates the url" do
-    webhook = Webhook.new name: "Test", board: boards(:writebook)
+    webhook = Webhook.new name: "Test", board: @board
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "not a URL"
 
-    webhook = Webhook.new name: "Test", board: boards(:writebook), url: "not a url"
+    webhook = Webhook.new name: "Test", board: @board, url: "not a url"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "not a URL"
 
-    webhook = Webhook.new name: "NOTHING", board: boards(:writebook), url: "example.com/webhook"
+    webhook = Webhook.new name: "NOTHING", board: @board, url: "example.com/webhook"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "must use http or https"
 
-    webhook = Webhook.new name: "BLANK", board: boards(:writebook), url: "//example.com/webhook"
+    webhook = Webhook.new name: "BLANK", board: @board, url: "//example.com/webhook"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "must use http or https"
 
-    webhook = Webhook.new name: "GOPHER", board: boards(:writebook), url: "gopher://example.com/webhook"
+    webhook = Webhook.new name: "GOPHER", board: @board, url: "gopher://example.com/webhook"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "must use http or https"
 
-    webhook = Webhook.new name: "HTTP", board: boards(:writebook), url: "http://example.com/webhook"
+    webhook = Webhook.new name: "HTTP", board: @board, url: "http://example.com/webhook"
     assert webhook.valid?
 
-    webhook = Webhook.new name: "HTTPS", board: boards(:writebook), url: "https://example.com/webhook"
+    webhook = Webhook.new name: "HTTPS", board: @board, url: "https://example.com/webhook"
     assert webhook.valid?
   end
 
   test "deactivate" do
-    webhook = webhooks(:active)
+    webhook = create(:webhook, :active, board: @board, account: @account)
 
     assert_changes -> { webhook.active? }, from: true, to: false do
       webhook.deactivate
@@ -46,7 +54,7 @@ class WebhookTest < ActiveSupport::TestCase
   end
 
   test "activate" do
-    webhook = webhooks(:inactive)
+    webhook = create(:webhook, :inactive, board: @board, account: @account)
 
     assert_changes -> { webhook.active? }, from: false, to: true do
       webhook.activate
@@ -54,7 +62,7 @@ class WebhookTest < ActiveSupport::TestCase
   end
 
   test "for_slack?" do
-    webhook = Webhook.new url: "https://hooks.slack.com/services/T12345678/B12345678/abcdefghijklmnopqrstuvwx" # gitleaks:allow
+    webhook = Webhook.new url: "[REDACTED:slack-web-hook]" # gitleaks:allow
     assert webhook.for_slack?
 
     webhook = Webhook.new url: "https://hooks.slack.com/services/T12345678/B12345678"

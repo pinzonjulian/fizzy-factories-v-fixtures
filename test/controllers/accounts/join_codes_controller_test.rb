@@ -1,11 +1,12 @@
 require "test_helper"
 
 class Account::JoinCodesControllerTest < ActionDispatch::IntegrationTest
-  setup do
-    sign_in_as :kevin
-  end
-
   test "reset" do
+    account = Current.account
+    kevin = create(:user, :kevin, account: account)
+
+    sign_in_as kevin
+
     get account_join_code_path
     assert_response :success
 
@@ -16,6 +17,11 @@ class Account::JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update" do
+    account = Current.account
+    kevin = create(:user, :kevin, account: account)
+
+    sign_in_as kevin
+
     get edit_account_join_code_path
     assert_response :success
 
@@ -25,14 +31,24 @@ class Account::JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update requires admin" do
-    logout_and_sign_in_as :david
+    account = Current.account
+    kevin = create(:user, :kevin, account: account)
+    david = create(:user, :david, account: account)
+
+    sign_in_as kevin
+    logout_and_sign_in_as david
 
     put account_join_code_path, params: { account_join_code: { usage_limit: 5 } }
     assert_response :forbidden
   end
 
   test "destroy requires admin" do
-    logout_and_sign_in_as :david
+    account = Current.account
+    kevin = create(:user, :kevin, account: account)
+    david = create(:user, :david, account: account)
+
+    sign_in_as kevin
+    logout_and_sign_in_as david
 
     delete account_join_code_path
     assert_response :forbidden

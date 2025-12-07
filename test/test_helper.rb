@@ -41,11 +41,12 @@ module ActiveSupport
     parallelize(workers: :number_of_processors)
 
     include ActiveJob::TestHelper
-    include ActionTextTestHelper, CardTestHelper, ChangeTestHelper, SessionTestHelper, FactoryTestHelper
+    include ActionTextTestHelper, CardTestHelper, ChangeTestHelper, SessionTestHelper
     include Turbo::Broadcastable::TestHelper
+    include FactoryBot::Syntax::Methods
 
     setup do
-      Current.account = accounts("37s")
+      Current.account = FactoryBot.create(:account, "37s")
     end
 
     teardown do
@@ -56,7 +57,7 @@ end
 
 class ActionDispatch::IntegrationTest
   setup do
-    integration_session.default_url_options[:script_name] = "/#{ActiveRecord::FixtureSet.identify("37signals")}"
+    integration_session.default_url_options[:script_name] = Current.account.slug
   end
 
   private

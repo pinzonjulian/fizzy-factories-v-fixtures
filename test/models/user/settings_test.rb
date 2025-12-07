@@ -2,7 +2,8 @@ require "test_helper"
 
 class User::SettingsTest < ActiveSupport::TestCase
   setup do
-    @user = users(:david)
+    @account = Current.account
+    @user = create(:user, :david, account: @account)
     @settings = @user.settings
   end
 

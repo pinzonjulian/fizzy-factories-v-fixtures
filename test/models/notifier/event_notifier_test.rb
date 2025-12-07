@@ -1,103 +1,168 @@
 require "test_helper"
 
 class Notifier::EventNotifierTest < ActiveSupport::TestCase
+  setup do
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    @jz_identity = create(:identity, :jz)
+    @kevin_identity = create(:identity, :kevin)
+    Current.session = create(:session, identity: @david_identity)
+    @system_user = create(:user, :system, account: @account)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+    @jz = create(:user, :jz, account: @account, identity: @jz_identity)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+    @column = create(:column, :writebook_triage, board: @board, account: @account)
+
+    @logo_card = with_current_user(@david) do
+      create(:card, :logo, board: @board, column: @column, account: @account, creator: @david)
+    end
+
+    @layout_card = with_current_user(@david) do
+      create(:card, :layout, board: @board, column: @column, account: @account, creator: @david)
+    end
+  end
+
   test "for returns the matching notifier class for the event" do
-    assert_kind_of Notifier::CardEventNotifier, Notifier.for(events(:logo_published))
+    event = create(:event, action: "card_published", account: @account, creator: @david, board: @board, eventable: @logo_card)
+
+    assert_kind_of Notifier::CardEventNotifier, Notifier.for(event)
   end
 
   test "generate does not create notifications if the event was system-generated" do
-    cards(:logo).drafted!
-    events(:logo_published).update!(creator: accounts("37s").system_user)
+    @logo_card.drafted!
+    event = create(:event, action: "card_published", account: @account, creator: @system_user, board: @board, eventable: @logo_card)
 
     assert_no_difference -> { Notification.count } do
-      Notifier.for(events(:logo_published)).notify
+      Notifier.for(event).notify
     end
   end
 
   test "creates a notification for each watcher, other than the event creator (events)" do
-    notifications = Notifier.for(events(:layout_commented)).notify
+    create(:watch, account: @account, card: @layout_card, user: @kevin, watching: true)
+    comment = with_current_user(@david) do
+      @layout_card.comments.create!(creator: @david, account: @account)
+    end
+    event = create(:event, action: "comment_created", account: @account, creator: @david, board: @board, eventable: comment)
 
-    assert_equal [ users(:kevin) ], notifications.map(&:user)
+    notifications = Notifier.for(event).notify
+
+    assert_equal [ @kevin ], notifications.map(&:user)
   end
 
   test "creates a notification for each watcher (mentions)" do
-    notifications = Notifier.for(events(:layout_commented)).notify
+    create(:watch, account: @account, card: @layout_card, user: @kevin, watching: true)
+    comment = with_current_user(@david) do
+      @layout_card.comments.create!(creator: @david, account: @account)
+    end
+    event = create(:event, action: "comment_created", account: @account, creator: @david, board: @board, eventable: comment)
 
-    assert_equal [ users(:kevin) ], notifications.map(&:user)
+    notifications = Notifier.for(event).notify
+
+    assert_equal [ @kevin ], notifications.map(&:user)
   end
 
   test "does not create a notification for access-only users" do
-    boards(:writebook).access_for(users(:kevin)).access_only!
+    @board.access_for(@kevin).access_only!
+    create(:watch, account: @account, card: @layout_card, user: @kevin, watching: true)
+    comment = with_current_user(@david) do
+      @layout_card.comments.create!(creator: @david, account: @account)
+    end
+    event = create(:event, action: "comment_created", account: @account, creator: @david, board: @board, eventable: comment)
 
-    notifications = Notifier.for(events(:layout_commented)).notify
+    notifications = Notifier.for(event).notify
 
-    assert_equal [ users(:kevin) ], notifications.map(&:user)
+    assert_equal [ @kevin ], notifications.map(&:user)
   end
 
   test "links to the card" do
-    boards(:writebook).access_for(users(:kevin)).watching!
+    @board.access_for(@kevin).watching!
+    event = create(:event, action: "card_published", account: @account, creator: @david, board: @board, eventable: @logo_card)
 
-    Notifier.for(events(:logo_published)).notify
+    Notifier.for(event).notify
 
-    assert_equal cards(:logo), Notification.last.source.eventable
+    assert_equal @logo_card, Notification.last.source.eventable
   end
 
   test "assignment events only create a notification for the assignee" do
-    boards(:writebook).access_for(users(:jz)).watching!
-    boards(:writebook).access_for(users(:kevin)).watching!
+    @board.access_for(@jz).watching!
+    @board.access_for(@kevin).watching!
+    event = create(:event, action: "card_assigned", account: @account, creator: @david, board: @board, eventable: @logo_card)
+    event.assignee_ids = [ @jz.id ]
+    event.save!
+    event = Event.find(event.id)
 
-    notifications = Notifier.for(events(:logo_assignment_jz)).notify
+    notifications = Notifier.for(event).notify
 
-    assert_equal [ users(:jz) ], notifications.map(&:user)
+    assert_equal [ @jz ], notifications.map(&:user)
   end
 
   test "assignment events do not notify users who are access-only for the board" do
-    boards(:writebook).access_for(users(:jz)).watching!
-    events(:logo_assignment_jz).update! creator: users(:jz)
+    @board.access_for(@jz).watching!
+    event = create(:event, action: "card_assigned", account: @account, creator: @jz, board: @board, eventable: @logo_card)
+    event.assignee_ids = [ @jz.id ]
+    event.save!
+    event = Event.find(event.id)
 
-    notifications = Notifier.for(events(:logo_assignment_jz)).notify
+    notifications = Notifier.for(event).notify
 
     assert_empty notifications
   end
 
   test "assignment events do not notify you if you assigned yourself" do
-    boards(:writebook).access_for(users(:david)).watching!
+    @board.access_for(@david).watching!
+    event = create(:event, action: "card_assigned", account: @account, creator: @david, board: @board, eventable: @logo_card)
+    event.assignee_ids = [ @david.id ]
+    event.save!
+    event = Event.find(event.id)
 
-    notifications = Notifier.for(events(:logo_assignment_david)).notify
+    notifications = Notifier.for(event).notify
 
     assert_empty notifications
   end
 
   test "create notifications on publish for mentionees" do
-    users(:kevin).mentioned_by(users(:david), at: cards(:logo))
+    create(:assignment, account: @account, card: @logo_card, assignee: @kevin, assigner: @david)
+    @kevin.mentioned_by(@david, at: @logo_card)
+    event = create(:event, action: "card_published", account: @account, creator: @david, board: @board, eventable: @logo_card)
 
-    assert_difference -> { users(:kevin).notifications.count }, +1 do
-      Notifier.for(events(:logo_published)).notify
+    assert_difference -> { @kevin.notifications.count }, +1 do
+      Notifier.for(event).notify
     end
   end
 
   test "don'create notifications on publish for mentionees that are not watching" do
-    users(:kevin).mentioned_by(users(:david), at: cards(:logo))
-    cards(:logo).unwatch_by(users(:kevin))
+    create(:assignment, account: @account, card: @logo_card, assignee: @kevin, assigner: @david)
+    @kevin.mentioned_by(@david, at: @logo_card)
+    @logo_card.unwatch_by(@kevin)
+    event = create(:event, action: "card_published", account: @account, creator: @david, board: @board, eventable: @logo_card)
 
-    assert_difference -> { users(:kevin).notifications.count }, +1 do
-      Notifier.for(events(:logo_published)).notify
+    assert_difference -> { @kevin.notifications.count }, +1 do
+      Notifier.for(event).notify
     end
   end
 
   test "don't create notifications on comment for mentionees" do
-    users(:david).mentioned_by(users(:kevin), at: cards(:layout))
+    @david.mentioned_by(@kevin, at: @layout_card)
+    comment = with_current_user(@david) do
+      @layout_card.comments.create!(creator: @david, account: @account)
+    end
+    event = create(:event, action: "comment_created", account: @account, creator: @david, board: @board, eventable: comment)
 
-    assert_no_difference -> { users(:david).notifications.count } do
-      Notifier.for(events(:layout_commented)).notify
+    assert_no_difference -> { @david.notifications.count } do
+      Notifier.for(event).notify
     end
   end
 
   test "assignment events notify assignees regardless of involvement level" do
-    boards(:writebook).access_for(users(:jz)).access_only!
+    @board.access_for(@jz).access_only!
+    event = create(:event, action: "card_assigned", account: @account, creator: @david, board: @board, eventable: @logo_card)
+    event.assignee_ids = [ @jz.id ]
+    event.save!
+    event = Event.find(event.id)
 
-    notifications = Notifier.for(events(:logo_assignment_jz)).notify
+    notifications = Notifier.for(event).notify
 
-    assert_equal [ users(:jz) ], notifications.map(&:user)
+    assert_equal [ @jz ], notifications.map(&:user)
   end
 end

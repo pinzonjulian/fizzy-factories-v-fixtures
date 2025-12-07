@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :join_code, class: "JoinCode" do
+  factory :join_code, class: "Account::JoinCode" do
 
     trait :"37s" do
       code { "37S0-5678-9XYZ" }

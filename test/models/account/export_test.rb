@@ -1,8 +1,20 @@
 require "test_helper"
 
 class Account::ExportTest < ActiveSupport::TestCase
+  setup do
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+    @column = create(:column, :writebook_triage, board: @board, account: @account)
+    with_current_user(@david) do
+      create(:card, :logo, board: @board, column: @column, account: @account)
+    end
+  end
+
   test "build_later enqueues ExportAccountDataJob" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: @account, user: @david)
 
     assert_enqueued_with(job: ExportAccountDataJob, args: [ export ]) do
       export.build_later
@@ -10,7 +22,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build generates zip with card JSON files" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: @account, user: @david)
 
     export.build
 
@@ -20,7 +32,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build sets status to processing then completed" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: @account, user: @david)
 
     export.build
 
@@ -29,7 +41,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build sends email when completed" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: @account, user: @david)
 
     assert_enqueued_jobs 1, only: ActionMailer::MailDeliveryJob do
       export.build
@@ -37,7 +49,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build sets status to failed on error" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: @account, user: @david)
     export.stubs(:generate_zip).raises(StandardError.new("Test error"))
 
     assert_raises(StandardError) do
@@ -48,9 +60,9 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "cleanup deletes exports completed more than 24 hours ago" do
-    old_export = Account::Export.create!(account: Current.account, user: users(:david), status: :completed, completed_at: 25.hours.ago)
-    recent_export = Account::Export.create!(account: Current.account, user: users(:david), status: :completed, completed_at: 23.hours.ago)
-    pending_export = Account::Export.create!(account: Current.account, user: users(:david), status: :pending)
+    old_export = Account::Export.create!(account: @account, user: @david, status: :completed, completed_at: 25.hours.ago)
+    recent_export = Account::Export.create!(account: @account, user: @david, status: :completed, completed_at: 23.hours.ago)
+    pending_export = Account::Export.create!(account: @account, user: @david, status: :pending)
 
     Account::Export.cleanup
 
@@ -60,15 +72,13 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build includes only accessible cards for user" do
-    user = users(:david)
-    export = Account::Export.create!(account: Current.account, user: user)
+    export = Account::Export.create!(account: @account, user: @david)
 
     export.build
 
     assert export.completed?
     assert export.file.attached?
 
-    # Verify zip contents
     Tempfile.create([ "test", ".zip" ]) do |temp|
       temp.binmode
       export.file.download { |chunk| temp.write(chunk) }
@@ -78,7 +88,6 @@ class Account::ExportTest < ActiveSupport::TestCase
         json_files = zip.glob("*.json")
         assert json_files.any?, "Zip should contain at least one JSON file"
 
-        # Verify structure of a JSON file
         json_content = JSON.parse(zip.read(json_files.first.name))
         assert json_content.key?("number")
         assert json_content.key?("title")

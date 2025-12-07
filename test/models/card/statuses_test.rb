@@ -2,38 +2,62 @@ require "test_helper"
 
 class Card::StatusesTest < ActiveSupport::TestCase
   setup do
-    Current.session = sessions(:david)
+    @account = Current.account
+
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+
+    @kevin_identity = create(:identity, :kevin)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+
+    @jz_identity = create(:identity, :jz)
+    @jz = create(:user, :jz, account: @account, identity: @jz_identity)
+
+    create(:user, :system, account: @account)
+
+    @board = create(:board, :writebook, account: @account, creator: @david)
   end
 
   test "cards start out in a `drafted` state" do
-    card = boards(:writebook).cards.create! creator: users(:kevin), title: "Newly created card"
+    card = with_current_user(@kevin) do
+      @board.cards.create! creator: @kevin, title: "Newly created card"
+    end
 
     assert card.drafted?
   end
 
   test "cards are only visible to the creator when drafted" do
-    card = boards(:writebook).cards.create! creator: users(:kevin), title: "Drafted Card"
+    card = with_current_user(@kevin) do
+      @board.cards.create! creator: @kevin, title: "Drafted Card"
+    end
     card.drafted!
 
-    assert_includes Card.published_or_drafted_by(users(:kevin)), card
-    assert_not_includes Card.published_or_drafted_by(users(:jz)), card
+    assert_includes Card.published_or_drafted_by(@kevin), card
+    assert_not_includes Card.published_or_drafted_by(@jz), card
   end
 
   test "cards are visible to everyone when published" do
-    card = boards(:writebook).cards.create! creator: users(:kevin), title: "Published Card"
+    card = with_current_user(@kevin) do
+      @board.cards.create! creator: @kevin, title: "Published Card"
+    end
     card.published!
 
-    assert_includes Card.published_or_drafted_by(users(:kevin)), card
-    assert_includes Card.published_or_drafted_by(users(:jz)), card
+    assert_includes Card.published_or_drafted_by(@kevin), card
+    assert_includes Card.published_or_drafted_by(@jz), card
   end
 
   test "an event is created when a card is created in the published state" do
     assert_no_difference(-> { Event.count }) do
-      boards(:writebook).cards.create! creator: users(:kevin), title: "Draft Card"
+      with_current_user(@kevin) do
+        @board.cards.create! creator: @kevin, title: "Draft Card"
+      end
     end
 
     assert_difference(-> { Event.count } => +1) do
-      @card = boards(:writebook).cards.create! creator: users(:kevin), title: "Published Card", status: :published
+      with_current_user(@kevin) do
+        @card = @board.cards.create! creator: @kevin, title: "Published Card", status: :published
+      end
     end
 
     event = Event.last
@@ -42,7 +66,9 @@ class Card::StatusesTest < ActiveSupport::TestCase
   end
 
   test "an event is created when a card is published" do
-    card = boards(:writebook).cards.create! creator: users(:kevin), title: "Published Card"
+    card = with_current_user(@kevin) do
+      @board.cards.create! creator: @kevin, title: "Published Card"
+    end
     assert_difference(-> { Event.count } => +1) do
       card.publish
     end
@@ -56,7 +82,9 @@ class Card::StatusesTest < ActiveSupport::TestCase
     freeze_time
 
     card = travel_to 1.week.ago do
-      boards(:writebook).cards.create! creator: users(:kevin), title: "Newly created card"
+      with_current_user(@kevin) do
+        @board.cards.create! creator: @kevin, title: "Newly created card"
+      end
     end
 
     assert card.drafted?
@@ -68,7 +96,9 @@ class Card::StatusesTest < ActiveSupport::TestCase
   end
 
   test "detect drafts that were just published" do
-    card = boards(:writebook).cards.create! creator: users(:kevin), title: "Draft Card"
+    card = with_current_user(@kevin) do
+      @board.cards.create! creator: @kevin, title: "Draft Card"
+    end
     assert card.drafted?
     assert_not card.was_just_published?
 
@@ -79,7 +109,9 @@ class Card::StatusesTest < ActiveSupport::TestCase
   end
 
   test "detect cards that were created and published" do
-    card = boards(:writebook).cards.create! creator: users(:kevin), title: "Published Card", status: :published
+    card = with_current_user(@kevin) do
+      @board.cards.create! creator: @kevin, title: "Published Card", status: :published
+    end
     assert card.was_just_published?
 
     assert_not Card.find(card.id).was_just_published?

@@ -2,40 +2,45 @@ require "test_helper"
 
 class Board::PublishableTest < ActiveSupport::TestCase
   setup do
-    Current.session = sessions(:david)
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @writebook = create(:board, :writebook, account: @account, creator: @david)
+    @private_board = create(:board, :private, account: @account, creator: @david)
   end
 
   test "published scope" do
-    boards(:writebook).publish
-    assert_includes Board.published, boards(:writebook)
-    assert_not_includes Board.published, boards(:private)
+    @writebook.publish
+    assert_includes Board.published, @writebook
+    assert_not_includes Board.published, @private_board
   end
 
   test "published?" do
-    assert_not boards(:writebook).published?
-    boards(:writebook).publish
-    assert boards(:writebook).published?
+    assert_not @writebook.published?
+    @writebook.publish
+    assert @writebook.published?
   end
 
   test "publish and unpublish" do
-    assert_not boards(:writebook).published?
+    assert_not @writebook.published?
 
     assert_difference -> { Board::Publication.count }, +1 do
-      boards(:writebook).publish
+      @writebook.publish
     end
 
-    assert boards(:writebook).published?
+    assert @writebook.published?
 
     assert_difference -> { Board::Publication.count }, -1 do
-      boards(:writebook).unpublish
+      @writebook.unpublish
     end
 
-    assert_not boards(:writebook).reload.published?
+    assert_not @writebook.reload.published?
   end
 
   test "find board by publication key" do
-    boards(:writebook).publish
-    assert_equal boards(:writebook), Board.find_by_published_key(boards(:writebook).publication.key)
+    @writebook.publish
+    assert_equal @writebook, Board.find_by_published_key(@writebook.publication.key)
 
     assert_raise ActiveRecord::RecordNotFound do
       Board.find_by_published_key("invalid")
@@ -43,13 +48,13 @@ class Board::PublishableTest < ActiveSupport::TestCase
   end
 
   test "publish doesn't create duplicate publications" do
-    boards(:writebook).publish
-    original_publication = boards(:writebook).publication
+    @writebook.publish
+    original_publication = @writebook.publication
 
     assert_no_difference -> { Board::Publication.count } do
-      boards(:writebook).publish
+      @writebook.publish
     end
 
-    assert_equal original_publication, boards(:writebook).reload.publication
+    assert_equal original_publication, @writebook.reload.publication
   end
 end

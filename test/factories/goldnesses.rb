@@ -1,5 +1,5 @@
 FactoryBot.define do
-  factory :goldness, class: "Goldness" do
+  factory :goldness, class: "Card::Goldness" do
 
     trait :logo do
       association :account, :"37s"

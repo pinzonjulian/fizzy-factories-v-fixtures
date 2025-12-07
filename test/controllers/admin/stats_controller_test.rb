@@ -2,7 +2,10 @@ require "test_helper"
 
 class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
   test "staff can access stats" do
-    sign_in_as :david
+    account = Current.account
+    david = create(:user, :david, account: account)
+
+    sign_in_as david
 
     untenanted do
       get admin_stats_url
@@ -12,7 +15,10 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "non-staff cannot access stats" do
-    sign_in_as :jz
+    account = Current.account
+    jz = create(:user, :jz, account: account)
+
+    sign_in_as jz
 
     untenanted do
       get admin_stats_url

@@ -1,6 +1,16 @@
 require "test_helper"
 
 class AccountTest < ActiveSupport::TestCase
+  setup do
+    @account = Current.account
+
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+
+    create(:user, :system, account: @account)
+  end
+
   test "create" do
     assert_difference "Account::JoinCode.count", +1 do
       Account.create!(name: "ACME corp")
@@ -8,24 +18,23 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "slug" do
-    account = accounts("37s")
-    assert_equal "/#{account.external_account_id}", account.slug
+    assert_equal "/#{@account.external_account_id}", @account.slug
   end
 
   test ".create_with_owner creates a new local account" do
     Current.without_account do
-      identity = identities(:david)
+      identity = create(:identity, :kevin)
       account = nil
 
       assert_changes -> { Account.count }, +1 do
         assert_changes -> { User.count }, +2 do
           account = Account.create_with_owner(
             account: {
-              external_account_id: ActiveRecord::FixtureSet.identify("account-create-with-owner-test"),
+              external_account_id: 999_888_777,
               name: "Account Create With Owner"
             },
             owner: {
-              name: "David",
+              name: "Kevin",
               identity: identity
             }
           )
@@ -34,12 +43,12 @@ class AccountTest < ActiveSupport::TestCase
 
       assert_not_nil account
       assert account.persisted?
-      assert_equal ActiveRecord::FixtureSet.identify("account-create-with-owner-test"), account.external_account_id
+      assert_equal 999_888_777, account.external_account_id
       assert_equal "Account Create With Owner", account.name
 
       owner = account.users.find_by(role: "owner")
-      assert_equal "David", owner.name
-      assert_equal "david@37signals.com", owner.identity.email_address
+      assert_equal "Kevin", owner.name
+      assert_match /kevin\+\d+@37signals\.com/, owner.identity.email_address
       assert_equal "owner", owner.role
       assert owner.admin?, "owner should also be considered an admin"
 
@@ -50,9 +59,9 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "#system_user returns the system user of the account" do
-    system_user = User.find_by!(account: accounts("37s"), role: :system)
+    system_user = User.find_by!(account: @account, role: :system)
 
-    assert_equal system_user, accounts("37s").system_user
+    assert_equal system_user, @account.system_user
   end
 
   test "#system_user raises if there is no system user" do

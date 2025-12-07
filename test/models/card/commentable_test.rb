@@ -1,14 +1,31 @@
 require "test_helper"
 
 class Card::CommentableTest < ActiveSupport::TestCase
-  test "creating a comment on a card makes the creator watch the card" do
-    boards(:writebook).access_for(users(:kevin)).access_only!
-    assert_not cards(:text).watched_by?(users(:kevin))
+  setup do
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    create(:user, :system, account: @account)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @kevin_identity = create(:identity, :kevin)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+    @column = create(:column, :writebook_triage, board: @board, account: @account)
+  end
 
-    with_current_user(:kevin) do
-      cards(:text).comments.create!(body: "This sounds interesting!")
+  test "creating a comment on a card makes the creator watch the card" do
+    @board.access_for(@kevin).access_only!
+    text_card = nil
+    with_current_user(@david) do
+      text_card = create(:card, :text, board: @board, column: @column, account: @account, creator: @david)
     end
 
-    assert cards(:text).watched_by?(users(:kevin))
+    assert_not text_card.watched_by?(@kevin)
+
+    with_current_user(@kevin) do
+      text_card.comments.create!(body: "This sounds interesting!")
+    end
+
+    assert text_card.watched_by?(@kevin)
   end
 end
