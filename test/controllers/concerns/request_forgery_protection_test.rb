@@ -2,7 +2,14 @@ require "test_helper"
 
 class RequestForgeryProtectionTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as :kevin
+    @account = Current.account
+    @kevin_identity = create(:identity, :kevin)
+    Current.session = create(:session, identity: @kevin_identity)
+    create(:user, :system, account: @account)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+    @board = create(:board, :writebook, account: @account, creator: @kevin)
+
+    sign_in_as @kevin
 
     @original_allow_forgery_protection = ActionController::Base.allow_forgery_protection
     ActionController::Base.allow_forgery_protection = true
@@ -81,13 +88,13 @@ class RequestForgeryProtectionTest < ActionDispatch::IntegrationTest
   end
 
   test "GET requests succeed regardless of Sec-Fetch-Site header" do
-    get board_path(boards(:writebook)), headers: { "Sec-Fetch-Site" => "cross-site" }
+    get board_path(@board), headers: { "Sec-Fetch-Site" => "cross-site" }
 
     assert_response :success
   end
 
   test "appends Sec-Fetch-Site to Vary header on GET requests" do
-    get board_path(boards(:writebook))
+    get board_path(@board)
 
     assert_response :success
     assert_includes response.headers["Vary"], "Sec-Fetch-Site"

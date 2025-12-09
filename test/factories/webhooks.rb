@@ -6,7 +6,7 @@ FactoryBot.define do
       name { "Production API" }
       url { "https://api.example.com/webhooks" }
       signing_secret { "p94Bx2HjempCdYB4DTyZkY1b" }
-      subscribed_actions { %w[ card_published card_assigned card_closed ].to_json }
+      subscribed_actions { %w[ card_published card_assigned card_closed ] }
       association :board, :writebook
       association :account, :"37s"
     end
@@ -16,7 +16,7 @@ FactoryBot.define do
       name { "Test Webhook" }
       url { "https://test.example.com/webhooks" }
       signing_secret { "H8ms8ADcV92v2x17hnLEiL5m" }
-      subscribed_actions { %w[ card_published card_assigned card_closed ].to_json }
+      subscribed_actions { %w[ card_published card_assigned card_closed ] }
       association :board, :private
       association :account, :"37s"
     end

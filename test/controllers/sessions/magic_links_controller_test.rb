@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @kevin_identity = create(:identity, :kevin)
+  end
+
   test "show" do
     untenanted do
       get session_magic_link_url
@@ -10,8 +14,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with sign in code" do
-    identity = identities(:kevin)
-    magic_link = MagicLink.create!(identity: identity)
+    magic_link = MagicLink.create!(identity: @kevin_identity)
 
     untenanted do
       post session_magic_link_url, params: { code: magic_link.code }
@@ -24,8 +27,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with sign up code" do
-    identity = identities(:kevin)
-    magic_link = MagicLink.create!(identity: identity, purpose: :sign_up)
+    magic_link = MagicLink.create!(identity: @kevin_identity, purpose: :sign_up)
 
     untenanted do
       post session_magic_link_url, params: { code: magic_link.code }
@@ -38,8 +40,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with invalid code" do
-    identity = identities(:kevin)
-    magic_link = MagicLink.create!(identity: identity)
+    magic_link = MagicLink.create!(identity: @kevin_identity)
 
     untenanted do
       post session_magic_link_url, params: { code: "INVALID" }
@@ -47,7 +48,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :redirect, "Invalid code should redirect"
 
-    expired_link = MagicLink.create!(identity: identity)
+    expired_link = MagicLink.create!(identity: @kevin_identity)
     expired_link.update_column(:expires_at, 1.hour.ago)
 
     post session_magic_link_url, params: { code: expired_link.code }

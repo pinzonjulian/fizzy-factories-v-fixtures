@@ -11,7 +11,7 @@ class Signup::AccountNameGeneratorTest < ActiveSupport::TestCase
     account_name = @generator.generate
     assert_equal "Newart's Fizzy", account_name, "The 1st account doesn't have 1st in the name"
 
-    first_account = Account.create!(external_account_id: "1st", name: account_name)
+    first_account = Account.create!(name: account_name)
     Current.without_account do
       @identity.users.create!(account: first_account, name: @name)
       @identity.reload
@@ -20,7 +20,7 @@ class Signup::AccountNameGeneratorTest < ActiveSupport::TestCase
     account_name = @generator.generate
     assert_equal "Newart's 2nd Fizzy", account_name
 
-    second_account = Account.create!(external_account_id: "2nd", name: account_name)
+    second_account = Account.create!(name: account_name)
     Current.without_account do
       @identity.users.create!(account: second_account, name: @name)
       @identity.reload
@@ -29,7 +29,7 @@ class Signup::AccountNameGeneratorTest < ActiveSupport::TestCase
     account_name = @generator.generate
     assert_equal "Newart's 3rd Fizzy", account_name
 
-    third_account = Account.create!(external_account_id: "3rd", name: account_name)
+    third_account = Account.create!(name: account_name)
     Current.without_account do
       @identity.users.create!(account: third_account, name: @name)
       @identity.reload
@@ -38,7 +38,7 @@ class Signup::AccountNameGeneratorTest < ActiveSupport::TestCase
     account_name = @generator.generate
     assert_equal "Newart's 4th Fizzy", account_name
 
-    fourth_account = Account.create!(external_account_id: "4th", name: account_name)
+    fourth_account = Account.create!(name: account_name)
     Current.without_account do
       @identity.users.create!(account: fourth_account, name: @name)
       @identity.reload
@@ -49,7 +49,7 @@ class Signup::AccountNameGeneratorTest < ActiveSupport::TestCase
   end
 
   test "generate continues from the previous highest index" do
-    account = Account.create!(external_account_id: "12th", name: "Newart's 12th Fizzy")
+    account = Account.create!(name: "Newart's 12th Fizzy")
     Current.without_account do
       @identity.users.create!(account: account, name: @name)
       @identity.reload

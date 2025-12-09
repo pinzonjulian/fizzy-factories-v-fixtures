@@ -1,8 +1,12 @@
 require "test_helper"
 
 class MagicLinkTest < ActiveSupport::TestCase
+  setup do
+    @kevin_identity = create(:identity, :kevin)
+  end
+
   test "new" do
-    magic_link = MagicLink.create!(identity: identities(:kevin))
+    magic_link = MagicLink.create!(identity: @kevin_identity)
 
     assert magic_link.code.present?
     assert_equal MagicLink::CODE_LENGTH, magic_link.code.length
@@ -11,8 +15,8 @@ class MagicLinkTest < ActiveSupport::TestCase
   end
 
   test "active" do
-    active_link = MagicLink.create!(identity: identities(:kevin))
-    expired_link = MagicLink.create!(identity: identities(:kevin))
+    active_link = MagicLink.create!(identity: @kevin_identity)
+    expired_link = MagicLink.create!(identity: @kevin_identity)
     expired_link.update_column(:expires_at, 1.hour.ago)
 
     assert_includes MagicLink.active, active_link
@@ -20,8 +24,8 @@ class MagicLinkTest < ActiveSupport::TestCase
   end
 
   test "stale" do
-    active_link = MagicLink.create!(identity: identities(:kevin))
-    expired_link = MagicLink.create!(identity: identities(:kevin))
+    active_link = MagicLink.create!(identity: @kevin_identity)
+    expired_link = MagicLink.create!(identity: @kevin_identity)
     expired_link.update_column(:expires_at, 1.hour.ago)
 
     assert_includes MagicLink.stale, expired_link
@@ -29,14 +33,14 @@ class MagicLinkTest < ActiveSupport::TestCase
   end
 
   test "consume" do
-    magic_link = MagicLink.create!(identity: identities(:kevin))
+    magic_link = MagicLink.create!(identity: @kevin_identity)
     code_with_spaces = magic_link.code.downcase.chars.join(" ")
 
     consumed_magic_link = MagicLink.consume(code_with_spaces)
     assert_equal magic_link, consumed_magic_link
     assert_not MagicLink.exists?(magic_link.id)
 
-    expired_link = MagicLink.create!(identity: identities(:kevin))
+    expired_link = MagicLink.create!(identity: @kevin_identity)
     expired_link.update_column(:expires_at, 1.hour.ago)
     assert_nil MagicLink.consume(expired_link.code)
     assert MagicLink.exists?(expired_link.id)
@@ -46,8 +50,8 @@ class MagicLinkTest < ActiveSupport::TestCase
   end
 
   test "cleanup" do
-    active_link = MagicLink.create!(identity: identities(:kevin))
-    expired_link = MagicLink.create!(identity: identities(:kevin))
+    active_link = MagicLink.create!(identity: @kevin_identity)
+    expired_link = MagicLink.create!(identity: @kevin_identity)
     expired_link.update_column(:expires_at, 1.hour.ago)
 
     MagicLink.cleanup

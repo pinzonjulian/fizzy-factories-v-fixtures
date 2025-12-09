@@ -1,8 +1,13 @@
 require "test_helper"
 
 class ControllerAuthenticationTest < ActionDispatch::IntegrationTest
+  setup do
+    @account = Current.account
+    @kevin = create(:user, :kevin, account: @account)
+  end
+
   test "access without an account slug redirects to menu" do
-    sign_in_as :kevin
+    sign_in_as @kevin
     integration_session.default_url_options[:script_name] = "" # no tenant
 
     get cards_path
@@ -17,7 +22,7 @@ class ControllerAuthenticationTest < ActionDispatch::IntegrationTest
   end
 
   test "access with an account slug and a session allows functional access" do
-    sign_in_as :kevin
+    sign_in_as @kevin
 
     get cards_path
 

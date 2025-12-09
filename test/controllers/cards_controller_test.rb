@@ -6,6 +6,8 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
     @identity_david = create(:identity, :david)
     @identity_kevin = create(:identity, :kevin)
     @identity_jz = create(:identity, :jz)
+    Current.session = create(:session, identity: @identity_david)
+    create(:user, :system, account: @account)
     @david = create(:user, :david, account: @account, identity: @identity_david)
     @board = create(:board, :writebook, account: @account, creator: @david)
     @kevin = create(:user, :kevin, account: @account, identity: @identity_kevin)
@@ -64,24 +66,6 @@ class CardsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update" do
-    puts "Card number: #{@logo_card.number}"
-    puts "Card id: #{@logo_card.id}"
-    puts "Kevin accesses: #{@kevin.accesses.pluck(:board_id)}"
-    puts "Kevin boards: #{@kevin.boards.pluck(:id)}"
-    puts "Board id: #{@board.id}"
-    puts "Kevin accessible_cards count: #{@kevin.accessible_cards.count}"
-    puts "Kevin accessible_cards by number: #{@kevin.accessible_cards.find_by(number: @logo_card.number)}"
-    puts "Kevin id: #{@kevin.id}"
-    puts "Kevin identity id: #{@kevin.identity.id}"
-    puts "Kevin identity users: #{@kevin.identity.users.pluck(:id)}"
-    puts "Account: #{@account.id}"
-    puts "Kevin account: #{@kevin.account_id}"
-    puts "Card path: #{card_path(@logo_card)}"
-    puts "Card to_param: #{@logo_card.to_param}"
-
-    get card_path(@logo_card)
-    puts "GET response: #{response.status}"
-
     patch card_path(@logo_card), as: :turbo_stream, params: {
       card: {
         title: "Logo needs to change",

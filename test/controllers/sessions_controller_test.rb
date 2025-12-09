@@ -1,6 +1,11 @@
 require "test_helper"
 
 class SessionsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @kevin_identity = create(:identity, :kevin)
+    @kevin_session = create(:session, identity: @kevin_identity)
+  end
+
   test "new" do
     untenanted do
       get new_session_path
@@ -10,11 +15,9 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    identity = identities(:kevin)
-
     untenanted do
       assert_difference -> { MagicLink.count }, 1 do
-        post session_path, params: { email_address: identity.email_address }
+        post session_path, params: { email_address: @kevin_identity.email_address }
       end
 
       assert_redirected_to session_magic_link_path
@@ -37,9 +40,6 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with invalid email address" do
-    # Avoid Sentry exceptions when attackers try to stuff invalid emails. The browser performs form
-    # field validation that should normally prevent this from occurring, so I'm not worried about
-    # returning proper validation errors.
     without_action_dispatch_exception_handling do
       untenanted do
         assert_no_difference -> { Identity.count } do
@@ -52,7 +52,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy" do
-    sign_in_as :kevin
+    sign_in_as @kevin_identity
 
     untenanted do
       delete session_path

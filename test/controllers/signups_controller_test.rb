@@ -1,6 +1,10 @@
 require "test_helper"
 
 class SignupsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @kevin_identity = create(:identity, :kevin)
+  end
+
   test "new" do
     untenanted do
       get new_signup_path
@@ -10,8 +14,7 @@ class SignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new for an authenticated user" do
-    identity = identities(:kevin)
-    sign_in_as identity
+    sign_in_as @kevin_identity
 
     untenanted do
       get new_signup_path
@@ -49,14 +52,13 @@ class SignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for an authenticated user" do
-    identity = identities(:kevin)
-    sign_in_as identity
+    sign_in_as @kevin_identity
 
     untenanted do
       assert_no_difference -> { Identity.count } do
         assert_no_difference -> { MagicLink.count } do
           post signup_path,
-            params: { signup: { email_address: identity.email_address } }
+            params: { signup: { email_address: @kevin_identity.email_address } }
         end
       end
 

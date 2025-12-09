@@ -2,9 +2,18 @@ require "test_helper"
 
 class Public::CardsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as :kevin
-    @board = boards(:writebook)
-    @card = cards(:logo)
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    @kevin_identity = create(:identity, :kevin)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+    @column = create(:column, :writebook_triage, account: @account, board: @board)
+    @card = with_current_user(@david) do
+      create(:card, :logo, account: @account, board: @board, column: @column, creator: @david)
+    end
+
+    sign_in_as @kevin
     @board.publish
   end
 

@@ -1,14 +1,22 @@
 require "test_helper"
 
 class Cards::PublishesControllerTest < ActionDispatch::IntegrationTest
-  test "create" do
-    account = Current.account
-    board = create(:board, :writebook, account: account)
-    column = create(:column, :writebook_triage, board: board, account: account)
-    kevin = create(:user, :kevin, account: account)
-    card = create(:card, :logo, board: board, column: column, account: account)
+  setup do
+    @account = Current.account
+    @kevin_identity = create(:identity, :kevin)
+    Current.session = create(:session, identity: @kevin_identity)
+    create(:user, :system, account: @account)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+    @board = create(:board, :writebook, account: @account, creator: @kevin)
+    @column = create(:column, :writebook_triage, board: @board, account: @account)
+  end
 
-    sign_in_as kevin
+  test "create" do
+    card = with_current_user(@kevin) do
+      create(:card, :logo, board: @board, column: @column, account: @account, creator: @kevin)
+    end
+
+    sign_in_as @kevin
     card.drafted!
 
     assert_changes -> { card.reload.published? }, from: false, to: true do
@@ -19,13 +27,11 @@ class Cards::PublishesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create and add another" do
-    account = Current.account
-    board = create(:board, :writebook, account: account)
-    column = create(:column, :writebook_triage, board: board, account: account)
-    kevin = create(:user, :kevin, account: account)
-    card = create(:card, :logo, board: board, column: column, account: account)
+    card = with_current_user(@kevin) do
+      create(:card, :logo, board: @board, column: @column, account: @account, creator: @kevin)
+    end
 
-    sign_in_as kevin
+    sign_in_as @kevin
     card.drafted!
 
     assert_changes -> { card.reload.published? }, from: false, to: true do

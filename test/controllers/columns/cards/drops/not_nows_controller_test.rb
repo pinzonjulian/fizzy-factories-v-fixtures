@@ -2,11 +2,21 @@ require "test_helper"
 
 class Columns::Cards::Drops::NotNowsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as :kevin
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    create(:user, :system, account: @account)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+    @triage_column = create(:column, :writebook_triage, board: @board, account: @account)
+
+    sign_in_as @david
   end
 
   test "create" do
-    card = cards(:logo)
+    card = with_current_user(@david) do
+      create(:card, account: @account, board: @board, column: @triage_column, creator: @david, title: "Test card", status: "published")
+    end
 
     assert_changes -> { card.reload.postponed? }, from: false, to: true do
       post columns_card_drops_not_now_path(card), as: :turbo_stream

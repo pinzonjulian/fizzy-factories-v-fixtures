@@ -18,7 +18,8 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "slug" do
-    assert_equal "/#{@account.external_account_id}", @account.slug
+    expected_slug = "/#{@account.external_account_id.to_s.rjust(7, '0')}"
+    assert_equal expected_slug, @account.slug
   end
 
   test ".create_with_owner creates a new local account" do

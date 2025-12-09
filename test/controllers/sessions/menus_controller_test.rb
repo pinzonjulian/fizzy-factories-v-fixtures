@@ -2,12 +2,11 @@ require "test_helper"
 
 class Sessions::MenusControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @identity = identities(:kevin)
+    @kevin_identity = create(:identity, :kevin)
   end
 
   test "show with no account" do
-    sign_in_as @identity
-    @identity.users.delete_all
+    sign_in_as @kevin_identity
 
     untenanted do
       get session_menu_url
@@ -17,12 +16,11 @@ class Sessions::MenusControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show with exactly one account" do
-    sign_in_as @identity
+    sign_in_as @kevin_identity
 
     Current.without_account do
-      @identity.users.delete_all
       account = Account.create!(external_account_id: 9999991, name: "Test Account")
-      @identity.users.create!(account: account, name: "Kevin")
+      @kevin_identity.users.create!(account: account, name: "Kevin")
     end
 
     untenanted do
@@ -34,12 +32,14 @@ class Sessions::MenusControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show with multiple accounts" do
-    sign_in_as @identity
-    @identity.users.delete_all
-    account1 = Account.create!(external_account_id: 9999992, name: "37signals")
-    account2 = Account.create!(external_account_id: 9999993, name: "Acme")
-    @identity.users.create!(account: account1, name: "Kevin")
-    @identity.users.create!(account: account2, name: "Kevin")
+    sign_in_as @kevin_identity
+
+    Current.without_account do
+      account1 = Account.create!(external_account_id: 9999992, name: "37signals")
+      account2 = Account.create!(external_account_id: 9999993, name: "Acme")
+      @kevin_identity.users.create!(account: account1, name: "Kevin")
+      @kevin_identity.users.create!(account: account2, name: "Kevin")
+    end
 
     untenanted do
       get session_menu_url

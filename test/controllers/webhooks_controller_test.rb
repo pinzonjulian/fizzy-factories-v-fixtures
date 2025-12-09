@@ -2,35 +2,38 @@ require "test_helper"
 
 class WebhooksControllerTest < ActionDispatch::IntegrationTest
   setup do
-    sign_in_as :kevin
+    @account = Current.account
+    @kevin = create(:user, :kevin, account: @account)
+    @david = create(:user, :david, account: @account)
+    @board = create(:board, :writebook, account: @account, creator: @david)
+    @private_board = create(:board, :private, account: @account, creator: @kevin)
+    @active_webhook = create(:webhook, :active, board: @board, account: @account)
+    @inactive_webhook = create(:webhook, :inactive, board: @private_board, account: @account)
+    sign_in_as @kevin
   end
 
   test "index" do
-    get board_webhooks_path(boards(:writebook))
+    get board_webhooks_path(@board)
     assert_response :success
   end
 
   test "show" do
-    webhook = webhooks(:active)
-    get board_webhook_path(webhook.board, webhook)
+    get board_webhook_path(@active_webhook.board, @active_webhook)
     assert_response :success
 
-    webhook = webhooks(:inactive)
-    get board_webhook_path(webhook.board, webhook)
+    get board_webhook_path(@inactive_webhook.board, @inactive_webhook)
     assert_response :success
   end
 
   test "new" do
-    get new_board_webhook_path(boards(:writebook))
+    get new_board_webhook_path(@board)
     assert_response :success
     assert_select "form"
   end
 
   test "create with valid params" do
-    board = boards(:writebook)
-
     assert_difference "Webhook.count", 1 do
-      post board_webhooks_path(board), params: {
+      post board_webhooks_path(@board), params: {
         webhook: {
           name: "Test Webhook",
           url: "https://example.com/webhook",
@@ -42,16 +45,15 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
     webhook = Webhook.last
 
     assert_redirected_to board_webhook_path(webhook.board, webhook)
-    assert_equal board, webhook.board
+    assert_equal @board, webhook.board
     assert_equal "Test Webhook", webhook.name
     assert_equal "https://example.com/webhook", webhook.url
     assert_equal [ "card_published", "card_closed" ], webhook.subscribed_actions
   end
 
   test "create with invalid params" do
-    board = boards(:writebook)
     assert_no_difference "Webhook.count" do
-      post board_webhooks_path(board), params: {
+      post board_webhooks_path(@board), params: {
         webhook: {
           name: "",
           url: "invalid-url"
@@ -63,36 +65,32 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "edit" do
-    webhook = webhooks(:active)
-    get edit_board_webhook_path(webhook.board, webhook)
+    get edit_board_webhook_path(@active_webhook.board, @active_webhook)
     assert_response :success
     assert_select "form"
 
-    webhook = webhooks(:inactive)
-    get edit_board_webhook_path(webhook.board, webhook)
+    get edit_board_webhook_path(@inactive_webhook.board, @inactive_webhook)
     assert_response :success
     assert_select "form"
   end
 
   test "update with valid params" do
-    webhook = webhooks(:active)
-    patch board_webhook_path(webhook.board, webhook), params: {
+    patch board_webhook_path(@active_webhook.board, @active_webhook), params: {
       webhook: {
         name: "Updated Webhook",
         subscribed_actions: [ "card_published" ]
       }
     }
 
-    webhook.reload
+    @active_webhook.reload
 
-    assert_redirected_to board_webhook_path(webhook.board, webhook)
-    assert_equal "Updated Webhook", webhook.name
-    assert_equal [ "card_published" ], webhook.subscribed_actions
+    assert_redirected_to board_webhook_path(@active_webhook.board, @active_webhook)
+    assert_equal "Updated Webhook", @active_webhook.name
+    assert_equal [ "card_published" ], @active_webhook.subscribed_actions
   end
 
   test "update with invalid params" do
-    webhook = webhooks(:active)
-    patch board_webhook_path(webhook.board, webhook), params: {
+    patch board_webhook_path(@active_webhook.board, @active_webhook), params: {
       webhook: {
         name: ""
       }
@@ -100,8 +98,8 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
 
-    assert_no_changes -> { webhook.reload.url } do
-      patch board_webhook_path(webhook.board, webhook), params: {
+    assert_no_changes -> { @active_webhook.reload.url } do
+      patch board_webhook_path(@active_webhook.board, @active_webhook), params: {
         webhook: {
           name: "Updated Webhook",
           url: "https://different.com/webhook"
@@ -109,16 +107,14 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to board_webhook_path(webhook.board, webhook)
+    assert_redirected_to board_webhook_path(@active_webhook.board, @active_webhook)
   end
 
   test "destroy" do
-    webhook = webhooks(:active)
-
     assert_difference "Webhook.count", -1 do
-      delete board_webhook_path(webhook.board, webhook)
+      delete board_webhook_path(@active_webhook.board, @active_webhook)
     end
 
-    assert_redirected_to board_webhooks_path(webhook.board)
+    assert_redirected_to board_webhooks_path(@active_webhook.board)
   end
 end

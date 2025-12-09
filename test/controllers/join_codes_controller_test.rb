@@ -2,15 +2,26 @@ require "test_helper"
 
 class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @account = accounts("37s")
-    @join_code = account_join_codes(:"37s")
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    create(:user, :system, account: @account)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+
+    @kevin_identity = create(:identity, :kevin)
+    @kevin = create(:user, :kevin, account: @account, identity: @kevin_identity)
+
+    @jz_identity = create(:identity, :jz)
+    @jz = create(:user, :jz, account: @account, identity: @jz_identity)
+
+    @join_code = @account.join_code
   end
 
   test "new" do
     get join_path(code: @join_code.code, script_name: @account.slug)
 
     assert_response :success
-    assert_in_body "37signals"
+    assert_in_body @account.name
   end
 
   test "new with an invalid code" do
@@ -40,15 +51,14 @@ class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for existing identity" do
-    identity = identities(:jz)
-    sign_in_as :jz
+    sign_in_as @jz
 
-    assert identity.users.exists?(account: @account), "JZ should be a member of 37s for this test"
-    assert identity.users.find_by!(account: @account).setup?, "JZ's user should be setup for this test"
+    assert @jz_identity.users.exists?(account: @account), "JZ should be a member of account for this test"
+    assert @jz_identity.users.find_by!(account: @account).setup?, "JZ's user should be setup for this test"
 
     assert_no_difference -> { Identity.count } do
       assert_no_difference -> { User.count } do
-        post join_path(code: @join_code.code, script_name: @account.slug), params: { email_address: identity.email_address }
+        post join_path(code: @join_code.code, script_name: @account.slug), params: { email_address: @jz_identity.email_address }
       end
     end
 
@@ -56,14 +66,19 @@ class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for signed-in identity without a user in the account redirects to verification" do
-    identity = identities(:mike)
-    sign_in_as :mike
+    # Create mike in a different account
+    initech = create(:account, :initech)
+    create(:user, :system_initech, account: initech)
+    mike_identity = create(:identity, :mike)
+    mike = create(:user, :mike, account: initech, identity: mike_identity)
 
-    assert_not identity.users.exists?(account: @account), "Mike should not be a member of 37s for this test"
+    sign_in_as mike
+
+    assert_not mike_identity.users.exists?(account: @account), "Mike should not be a member of account for this test"
 
     assert_no_difference -> { Identity.count } do
       assert_difference -> { User.count }, 1 do
-        post join_path(code: @join_code.code, script_name: @account.slug), params: { email_address: identity.email_address }
+        post join_path(code: @join_code.code, script_name: @account.slug), params: { email_address: mike_identity.email_address }
       end
     end
 
@@ -71,7 +86,7 @@ class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for different identity terminates existing session" do
-    sign_in_as :kevin
+    sign_in_as @kevin
 
     assert_difference -> { Identity.count }, 1 do
       assert_difference -> { User.count }, 1 do

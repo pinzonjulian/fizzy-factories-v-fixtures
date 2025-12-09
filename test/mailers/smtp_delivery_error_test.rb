@@ -20,6 +20,14 @@ class SmtpDeliveryErrorTest < ActionMailer::TestCase
   end
   tests TestMailer
 
+  setup do
+    @account = Current.account
+    @david_identity = create(:identity, :david)
+    create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+    create(:user, :system, account: @account)
+  end
+
   test "deliver_later ignores bad recipient addresses" do
     assert_nothing_raised do
       perform_enqueued_jobs only: ActionMailer::MailDeliveryJob do

@@ -3,13 +3,21 @@ require "test_helper"
 class IdentityTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
 
-  test "send_magic_link" do
-    identity = identities(:david)
+  setup do
+    @account = Current.account
 
+    @david_identity = create(:identity, :david)
+    Current.session = create(:session, identity: @david_identity)
+    @david = create(:user, :david, account: @account, identity: @david_identity)
+
+    create(:user, :system, account: @account)
+  end
+
+  test "send_magic_link" do
     assert_emails 1 do
-      magic_link = identity.send_magic_link
+      magic_link = @david_identity.send_magic_link
       assert_not_nil magic_link
-      assert_equal identity, magic_link.identity
+      assert_equal @david_identity, magic_link.identity
     end
   end
 
@@ -31,19 +39,19 @@ class IdentityTest < ActiveSupport::TestCase
   end
 
   test "join" do
-    identity = identities(:david)
-    account = accounts(:initech)
+    other_account = create(:account, :initech)
+    create(:user, :system_initech, account: other_account)
 
     Current.without_account do
       assert_difference "User.count", 1 do
-        identity.join(account)
+        @david_identity.join(other_account)
       end
 
-      user = account.users.find_by!(identity: identity)
+      user = other_account.users.find_by!(identity: @david_identity)
 
       assert_not_nil user
-      assert_equal identity, user.identity
-      assert_equal identity.email_address, user.name
+      assert_equal @david_identity, user.identity
+      assert_equal @david_identity.email_address, user.name
     end
   end
 end
