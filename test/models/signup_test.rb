@@ -45,7 +45,7 @@ class SignupTest < ActiveSupport::TestCase
     Account.any_instance.expects(:setup_customer_template).once
 
     Current.without_account do
-      signup = Signup.new(full_name: "Kevin", identity: identities(:kevin))
+      signup = Signup.new(full_name: "Kevin", identity: identities.kevin)
 
       assert signup.complete
 
@@ -55,7 +55,7 @@ class SignupTest < ActiveSupport::TestCase
 
       signup_invalid = Signup.new(
         full_name: "",
-        identity: identities(:kevin)
+        identity: identities.kevin
       )
       assert_not signup_invalid.complete
       assert_not_empty signup_invalid.errors[:full_name]

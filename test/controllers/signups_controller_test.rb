@@ -10,7 +10,7 @@ class SignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new for an authenticated user" do
-    identity = identities(:kevin)
+    identity = identities.kevin
     sign_in_as identity
 
     untenanted do
@@ -49,7 +49,7 @@ class SignupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for an authenticated user" do
-    identity = identities(:kevin)
+    identity = identities.kevin
     sign_in_as identity
 
     untenanted do

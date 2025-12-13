@@ -12,7 +12,7 @@ class Users::VerificationsControllerTest < ActionDispatch::IntegrationTest
   test "create verifies the user and redirects to join" do
     sign_in_as :david
 
-    user = users(:david)
+    user = users.david
     user.update_column(:verified_at, nil)
     assert_not user.verified?
 

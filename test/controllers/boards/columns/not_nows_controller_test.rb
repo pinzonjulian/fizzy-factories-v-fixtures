@@ -6,7 +6,7 @@ class Boards::Columns::NotNowsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show" do
-    get board_columns_not_now_path(boards(:writebook))
+    get board_columns_not_now_path(boards.writebook)
     assert_response :success
   end
 end

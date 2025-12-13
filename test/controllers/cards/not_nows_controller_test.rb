@@ -6,7 +6,7 @@ class Cards::NotNowsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    card = cards(:logo)
+    card = cards.logo
 
     assert_changes -> { card.reload.postponed? }, from: false, to: true do
       post card_not_now_path(card)

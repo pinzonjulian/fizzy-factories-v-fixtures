@@ -2,8 +2,8 @@ require "test_helper"
 
 class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @account = accounts("37s")
-    @join_code = account_join_codes(:"37s")
+    @account = accounts._37s
+    @join_code = account_join_codes._37s
   end
 
   test "new" do
@@ -40,7 +40,7 @@ class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for existing identity" do
-    identity = identities(:jz)
+    identity = identities.jz
     sign_in_as :jz
 
     assert identity.users.exists?(account: @account), "JZ should be a member of 37s for this test"
@@ -56,7 +56,7 @@ class JoinCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create for signed-in identity without a user in the account redirects to verification" do
-    identity = identities(:mike)
+    identity = identities.mike
     sign_in_as :mike
 
     assert_not identity.users.exists?(account: @account), "Mike should not be a member of 37s for this test"

@@ -4,7 +4,7 @@ class IdentityTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
 
   test "send_magic_link" do
-    identity = identities(:david)
+    identity = identities.david
 
     assert_emails 1 do
       magic_link = identity.send_magic_link
@@ -31,8 +31,8 @@ class IdentityTest < ActiveSupport::TestCase
   end
 
   test "join" do
-    identity = identities(:david)
-    account = accounts(:initech)
+    identity = identities.david
+    account = accounts.initech
 
     Current.without_account do
       assert_difference "User.count", 1 do

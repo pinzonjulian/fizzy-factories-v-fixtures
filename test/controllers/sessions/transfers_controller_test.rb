@@ -10,7 +10,7 @@ class Sessions::TransfersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update establishes a session when the code is valid" do
-    identity = identities(:david)
+    identity = identities.david
 
     untenanted do
       put session_transfer_path(identity.transfer_id)

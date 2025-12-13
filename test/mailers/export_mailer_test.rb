@@ -2,7 +2,7 @@ require "test_helper"
 
 class ExportMailerTest < ActionMailer::TestCase
   test "completed" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: Current.account, user: users.david)
     email = ExportMailer.completed(export)
 
     assert_emails 1 do

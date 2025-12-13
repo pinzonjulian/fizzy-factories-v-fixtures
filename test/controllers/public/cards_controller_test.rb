@@ -3,8 +3,8 @@ require "test_helper"
 class Public::CardsControllerTest < ActionDispatch::IntegrationTest
   setup do
     sign_in_as :kevin
-    @board = boards(:writebook)
-    @card = cards(:logo)
+    @board = boards.writebook
+    @card = cards.logo
     @board.publish
   end
 

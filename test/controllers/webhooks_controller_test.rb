@@ -6,28 +6,28 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index" do
-    get board_webhooks_path(boards(:writebook))
+    get board_webhooks_path(boards.writebook)
     assert_response :success
   end
 
   test "show" do
-    webhook = webhooks(:active)
+    webhook = webhooks.active
     get board_webhook_path(webhook.board, webhook)
     assert_response :success
 
-    webhook = webhooks(:inactive)
+    webhook = webhooks.inactive
     get board_webhook_path(webhook.board, webhook)
     assert_response :success
   end
 
   test "new" do
-    get new_board_webhook_path(boards(:writebook))
+    get new_board_webhook_path(boards.writebook)
     assert_response :success
     assert_select "form"
   end
 
   test "create with valid params" do
-    board = boards(:writebook)
+    board = boards.writebook
 
     assert_difference "Webhook.count", 1 do
       post board_webhooks_path(board), params: {
@@ -49,7 +49,7 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with invalid params" do
-    board = boards(:writebook)
+    board = boards.writebook
     assert_no_difference "Webhook.count" do
       post board_webhooks_path(board), params: {
         webhook: {
@@ -63,19 +63,19 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "edit" do
-    webhook = webhooks(:active)
+    webhook = webhooks.active
     get edit_board_webhook_path(webhook.board, webhook)
     assert_response :success
     assert_select "form"
 
-    webhook = webhooks(:inactive)
+    webhook = webhooks.inactive
     get edit_board_webhook_path(webhook.board, webhook)
     assert_response :success
     assert_select "form"
   end
 
   test "update with valid params" do
-    webhook = webhooks(:active)
+    webhook = webhooks.active
     patch board_webhook_path(webhook.board, webhook), params: {
       webhook: {
         name: "Updated Webhook",
@@ -91,7 +91,7 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update with invalid params" do
-    webhook = webhooks(:active)
+    webhook = webhooks.active
     patch board_webhook_path(webhook.board, webhook), params: {
       webhook: {
         name: ""
@@ -113,7 +113,7 @@ class WebhooksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy" do
-    webhook = webhooks(:active)
+    webhook = webhooks.active
 
     assert_difference "Webhook.count", -1 do
       delete board_webhook_path(webhook.board, webhook)

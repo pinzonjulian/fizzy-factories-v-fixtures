@@ -8,13 +8,13 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "slug" do
-    account = accounts("37s")
-    assert_equal "/#{account.external_account_id}", account.slug
+    account = accounts._37s
+    assert_equal "/#{AccountSlug.encode(account.external_account_id)}", account.slug
   end
 
   test ".create_with_owner creates a new local account" do
     Current.without_account do
-      identity = identities(:david)
+      identity = identities.david
       account = nil
 
       assert_changes -> { Account.count }, +1 do
@@ -50,9 +50,9 @@ class AccountTest < ActiveSupport::TestCase
   end
 
   test "#system_user returns the system user of the account" do
-    system_user = User.find_by!(account: accounts("37s"), role: :system)
+    system_user = User.find_by!(account: accounts._37s, role: :system)
 
-    assert_equal system_user, accounts("37s").system_user
+    assert_equal system_user, accounts._37s.system_user
   end
 
   test "#system_user raises if there is no system user" do

@@ -17,7 +17,7 @@ class LandingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "redirects to boards when only one board" do
-    sole_board, *boards_to_delete = users(:kevin).boards.to_a
+    sole_board, *boards_to_delete = users.kevin.boards.to_a
     boards_to_delete.each(&:destroy)
 
     get landing_path

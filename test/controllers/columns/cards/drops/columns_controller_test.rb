@@ -6,8 +6,8 @@ class Columns::Cards::Drops::ColumnsControllerTest < ActionDispatch::Integration
   end
 
   test "create" do
-    card = cards(:logo)
-    column = columns(:writebook_in_progress)
+    card = cards.logo
+    column = columns.writebook_in_progress
 
     assert_changes -> { card.reload.column }, to: column do
       post columns_card_drops_column_path(card, column_id: column.id), as: :turbo_stream

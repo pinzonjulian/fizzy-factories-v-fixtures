@@ -2,7 +2,7 @@ require "test_helper"
 
 class WebhookTest < ActiveSupport::TestCase
   test "create" do
-    webhook = Webhook.create! name: "Test", url: "https://example.com/webhook", board: boards(:writebook)
+    webhook = Webhook.create! name: "Test", url: "https://example.com/webhook", board: boards.writebook
     assert webhook.persisted?
     assert webhook.active?
     assert webhook.signing_secret.present?
@@ -10,35 +10,35 @@ class WebhookTest < ActiveSupport::TestCase
   end
 
   test "validates the url" do
-    webhook = Webhook.new name: "Test", board: boards(:writebook)
+    webhook = Webhook.new name: "Test", board: boards.writebook
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "not a URL"
 
-    webhook = Webhook.new name: "Test", board: boards(:writebook), url: "not a url"
+    webhook = Webhook.new name: "Test", board: boards.writebook, url: "not a url"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "not a URL"
 
-    webhook = Webhook.new name: "NOTHING", board: boards(:writebook), url: "example.com/webhook"
+    webhook = Webhook.new name: "NOTHING", board: boards.writebook, url: "example.com/webhook"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "must use http or https"
 
-    webhook = Webhook.new name: "BLANK", board: boards(:writebook), url: "//example.com/webhook"
+    webhook = Webhook.new name: "BLANK", board: boards.writebook, url: "//example.com/webhook"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "must use http or https"
 
-    webhook = Webhook.new name: "GOPHER", board: boards(:writebook), url: "gopher://example.com/webhook"
+    webhook = Webhook.new name: "GOPHER", board: boards.writebook, url: "gopher://example.com/webhook"
     assert_not webhook.valid?
     assert_includes webhook.errors[:url], "must use http or https"
 
-    webhook = Webhook.new name: "HTTP", board: boards(:writebook), url: "http://example.com/webhook"
+    webhook = Webhook.new name: "HTTP", board: boards.writebook, url: "http://example.com/webhook"
     assert webhook.valid?
 
-    webhook = Webhook.new name: "HTTPS", board: boards(:writebook), url: "https://example.com/webhook"
+    webhook = Webhook.new name: "HTTPS", board: boards.writebook, url: "https://example.com/webhook"
     assert webhook.valid?
   end
 
   test "deactivate" do
-    webhook = webhooks(:active)
+    webhook = webhooks.active
 
     assert_changes -> { webhook.active? }, from: true, to: false do
       webhook.deactivate
@@ -46,7 +46,7 @@ class WebhookTest < ActiveSupport::TestCase
   end
 
   test "activate" do
-    webhook = webhooks(:inactive)
+    webhook = webhooks.inactive
 
     assert_changes -> { webhook.active? }, from: false, to: true do
       webhook.activate

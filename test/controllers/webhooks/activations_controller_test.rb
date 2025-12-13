@@ -6,7 +6,7 @@ class Webhooks::ActivationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    webhook = webhooks(:inactive)
+    webhook = webhooks.inactive
 
     assert_not webhook.active?
 

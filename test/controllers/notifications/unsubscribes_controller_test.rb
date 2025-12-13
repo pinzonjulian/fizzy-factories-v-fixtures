@@ -2,7 +2,7 @@ require "test_helper"
 
 class Notifications::UnsubscribesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = users(:david)
+    @user = users.david
     @access_token = @user.generate_token_for(:unsubscribe)
 
     sign_in_as @user

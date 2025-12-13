@@ -11,7 +11,7 @@ module SessionTestHelper
       identity = user.identity
       raise "User #{user.name} (#{user.id}) doesn't have an associated identity" unless identity
     elsif !identity.is_a?(Identity)
-      identity = identities(identity)
+      identity = identities.send(identity)
     end
 
     identity.send_magic_link
@@ -40,7 +40,7 @@ module SessionTestHelper
   end
 
   def with_current_user(user)
-    user = users(user) unless user.is_a? User
+    user = users.send(user) unless user.is_a? User
     @old_session = Current.session
     begin
       Current.session = Session.new(identity: user.identity)

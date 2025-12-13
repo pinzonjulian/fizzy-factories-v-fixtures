@@ -10,7 +10,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    identity = identities(:kevin)
+    identity = identities.kevin
 
     untenanted do
       assert_difference -> { MagicLink.count }, 1 do

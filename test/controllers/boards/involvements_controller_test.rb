@@ -6,10 +6,10 @@ class Boards::InvolvementsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update" do
-    board = boards(:writebook)
-    board.access_for(users(:kevin)).access_only!
+    board = boards.writebook
+    board.access_for(users.kevin).access_only!
 
-    assert_changes -> { board.access_for(users(:kevin)).involvement }, from: "access_only", to: "watching" do
+    assert_changes -> { board.access_for(users.kevin).involvement }, from: "access_only", to: "watching" do
       put board_involvement_path(board, involvement: "watching")
     end
 

@@ -4,8 +4,8 @@ class User::EmailAddressChangeableTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
 
   setup do
-    @identity = identities(:kevin)
-    @user = @identity.users.find_by!(account: accounts("37s"))
+    @identity = identities.kevin
+    @user = @identity.users.find_by!(account: accounts._37s)
     @new_email = "newart@example.com"
     @old_email = @identity.email_address
   end
@@ -18,7 +18,7 @@ class User::EmailAddressChangeableTest < ActiveSupport::TestCase
 
   test "change_email_address" do
     old_identity = @identity
-    new_identity = identities(:mike)
+    new_identity = identities.mike
 
     assert_difference -> { Identity.count }, +1 do
       @user.change_email_address(@new_email)

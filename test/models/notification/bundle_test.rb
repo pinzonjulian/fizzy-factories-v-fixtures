@@ -2,13 +2,13 @@ require "test_helper"
 
 class Notification::BundleTest < ActiveSupport::TestCase
   setup do
-    @user = users(:david)
+    @user = users.david
     @user.settings.bundle_email_every_few_hours!
   end
 
   test "new notifications are bundled" do
     notification = assert_difference -> { @user.notification_bundles.pending.count }, 1 do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
 
     bundle = @user.notification_bundles.pending.last
@@ -19,7 +19,7 @@ class Notification::BundleTest < ActiveSupport::TestCase
     @user.settings.bundle_email_never!
 
     assert_no_difference -> { @user.notification_bundles.count } do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
   end
 
@@ -27,17 +27,17 @@ class Notification::BundleTest < ActiveSupport::TestCase
     @user.notification_bundles.destroy_all
 
     notification_1 = assert_difference -> { @user.notification_bundles.pending.count }, 1 do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
     travel_to 3.hours.from_now
 
     notification_2 = assert_no_difference -> { @user.notification_bundles.count } do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
     travel_to 3.days.from_now
 
     notification_3 = assert_difference -> { @user.notification_bundles.pending.count }, 1 do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
 
     assert_equal 2, @user.notification_bundles.count
@@ -99,7 +99,7 @@ class Notification::BundleTest < ActiveSupport::TestCase
   test "deliver_all delivers due bundles" do
     @user.notification_bundles.destroy_all
 
-    notification = @user.notifications.create!(source: events(:logo_published), creator: @user)
+    notification = @user.notifications.create!(source: events.logo_published, creator: @user)
 
     bundle = @user.notification_bundles.pending.last
 
@@ -117,7 +117,7 @@ class Notification::BundleTest < ActiveSupport::TestCase
   end
 
   test "deliver_all don't deliver bundles that are not due" do
-    @user.notifications.create!(source: events(:logo_published), creator: @user)
+    @user.notifications.create!(source: events.logo_published, creator: @user)
     bundle = @user.notification_bundles.pending.last
 
     bundle.update!(ends_at: 1.minute.from_now)
@@ -134,7 +134,7 @@ class Notification::BundleTest < ActiveSupport::TestCase
     @user.settings.update!(timezone_name: "Madrid")
 
     freeze_time Time.utc(2025, 1, 15, 14, 30, 0) do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
       bundle = @user.notification_bundles.pending.last
       bundle.deliver
 
@@ -147,8 +147,8 @@ class Notification::BundleTest < ActiveSupport::TestCase
   end
 
   test "out-of-order notification bundling should still work" do
-    first_notification = @user.notifications.create!(source: events(:logo_published), creator: @user)
-    second_notification = @user.notifications.create!(source: events(:logo_published), creator: @user)
+    first_notification = @user.notifications.create!(source: events.logo_published, creator: @user)
+    second_notification = @user.notifications.create!(source: events.logo_published, creator: @user)
     @user.notification_bundles.destroy_all
 
     assert first_notification.created_at < second_notification.created_at

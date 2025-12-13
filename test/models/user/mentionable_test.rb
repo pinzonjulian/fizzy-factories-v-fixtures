@@ -6,15 +6,15 @@ class User::MentionableTest < ActiveSupport::TestCase
   end
 
   test "mentioned by" do
-    users(:david).mentions.destroy_all
+    users.david.mentions.destroy_all
 
-    assert_difference -> { users(:david).mentions.count }, +1 do
-      users(:david).mentioned_by users(:jz), at: cards(:logo)
+    assert_difference -> { users.david.mentions.count }, +1 do
+      users.david.mentioned_by users.jz, at: cards.logo
     end
 
     # No dups
-    assert_no_difference -> { users(:david).mentions.count }, +1 do
-      users(:david).mentioned_by users(:jz), at: cards(:logo)
+    assert_no_difference -> { users.david.mentions.count }, +1 do
+      users.david.mentioned_by users.jz, at: cards.logo
     end
   end
 end

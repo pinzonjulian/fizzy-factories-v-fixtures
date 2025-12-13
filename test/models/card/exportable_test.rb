@@ -2,7 +2,7 @@ require "test_helper"
 
 class Card::ExportableTest < ActiveSupport::TestCase
   test "export_json returns card data as JSON" do
-    card = cards(:logo)
+    card = cards.logo
 
     json = JSON.parse(card.export_json)
 
@@ -10,7 +10,7 @@ class Card::ExportableTest < ActiveSupport::TestCase
     assert_equal "The logo isn't big enough", json["title"]
     assert_equal "Writebook", json["board"]
     assert_equal "Triage", json["status"]
-    assert_equal users(:david).id, json["creator"]["id"]
+    assert_equal users.david.id, json["creator"]["id"]
     assert_equal "David", json["creator"]["name"]
     assert_equal "david@37signals.com", json["creator"]["email"]
     assert_equal "", json["description"]
@@ -20,7 +20,7 @@ class Card::ExportableTest < ActiveSupport::TestCase
   end
 
   test "export_attachments returns attachment paths and blobs" do
-    card = cards(:logo)
+    card = cards.logo
 
     blob = ActiveStorage::Blob.create_and_upload!(
       io: file_fixture("moon.jpg").open,

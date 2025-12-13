@@ -6,7 +6,7 @@ class Cards::PublishesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    card = cards(:logo)
+    card = cards.logo
     card.drafted!
 
     assert_changes -> { card.reload.published? }, from: false, to: true do
@@ -17,7 +17,7 @@ class Cards::PublishesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create and add another" do
-    card = cards(:logo)
+    card = cards.logo
     card.drafted!
 
     assert_changes -> { card.reload.published? }, from: false, to: true do

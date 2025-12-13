@@ -6,7 +6,7 @@ class Boards::Columns::StreamsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show" do
-    get board_columns_stream_path(boards(:writebook))
+    get board_columns_stream_path(boards.writebook)
     assert_response :success
   end
 end

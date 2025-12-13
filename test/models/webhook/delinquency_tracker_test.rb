@@ -2,10 +2,10 @@ require "test_helper"
 
 class Webhook::DelinquencyTrackerTest < ActiveSupport::TestCase
   test "record_delivery_of" do
-    tracker = webhook_delinquency_trackers(:active_webhook_tracker)
+    tracker = webhook_delinquency_trackers.active_webhook_tracker
     webhook = tracker.webhook
-    successful_delivery = webhook_deliveries(:successfully_completed)
-    failed_delivery = webhook_deliveries(:errored)
+    successful_delivery = webhook_deliveries.successfully_completed
+    failed_delivery = webhook_deliveries.errored
 
     tracker.update!(consecutive_failures_count: 5)
     tracker.record_delivery_of(successful_delivery)

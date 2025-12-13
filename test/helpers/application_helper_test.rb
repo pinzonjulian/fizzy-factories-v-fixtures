@@ -19,30 +19,30 @@ class ApplicationHelperTest < ActionView::TestCase
   end
 
   test "page_title_tag on tenanted page when user has a single account" do
-    Current.session = sessions(:david)
+    Current.session = sessions.david
 
     assert_select parse(page_title_tag), "title", text: "Fizzy"
   end
 
   test "page_title_tag on tenanted page when user has multiple accounts" do
-    Current.session = sessions(:david)
+    Current.session = sessions.david
     other_account = Account.create!(external_account_id: "dangling-tenant", name: "Other Account")
-    identities(:david).users.create!(account: other_account, name: "David")
+    identities.david.users.create!(account: other_account, name: "David")
 
     assert_select parse(page_title_tag), "title", text: "37signals | Fizzy"
   end
 
   test "page_title_tag on tenanted page with a page title when user has a single account" do
-    Current.session = sessions(:david)
+    Current.session = sessions.david
     @page_title = "Holodeck"
 
     assert_select parse(page_title_tag), "title", text: "Holodeck | Fizzy"
   end
 
   test "page_title_tag on tenanted page with a page title when user has multiple account" do
-    Current.session = sessions(:david)
+    Current.session = sessions.david
     other_account = Account.create!(external_account_id: "dangling-tenant", name: "Other Account")
-    identities(:david).users.create!(account: other_account, name: "David")
+    identities.david.users.create!(account: other_account, name: "David")
     @page_title = "Holodeck"
 
     assert_select parse(page_title_tag), "title", text: "Holodeck | 37signals | Fizzy"

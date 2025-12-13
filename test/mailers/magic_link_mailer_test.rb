@@ -2,7 +2,7 @@ require "test_helper"
 
 class MagicLinkMailerTest < ActionMailer::TestCase
   test "sign_in_instructions" do
-    magic_link = MagicLink.create!(identity: identities(:kevin))
+    magic_link = MagicLink.create!(identity: identities.kevin)
     email = MagicLinkMailer.sign_in_instructions(magic_link)
 
     assert_emails 1 do

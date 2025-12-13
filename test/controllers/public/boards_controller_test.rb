@@ -4,18 +4,18 @@ class Public::BoardsControllerTest < ActionDispatch::IntegrationTest
   setup do
     sign_in_as :kevin
 
-    boards(:writebook).publish
+    boards.writebook.publish
   end
 
   test "show" do
-    get published_board_path(boards(:writebook))
+    get published_board_path(boards.writebook)
     assert_response :success
   end
 
   test "not found if the board is not published" do
-    key = boards(:writebook).publication.key
+    key = boards.writebook.publication.key
 
-    boards(:writebook).unpublish
+    boards.writebook.unpublish
     get public_board_path(key)
 
     assert_response :not_found
@@ -23,7 +23,7 @@ class Public::BoardsControllerTest < ActionDispatch::IntegrationTest
 
   test "show works without authentication" do
     sign_out
-    get published_board_path(boards(:writebook))
+    get published_board_path(boards.writebook)
     assert_response :success
   end
 end

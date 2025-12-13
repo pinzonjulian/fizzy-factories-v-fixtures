@@ -9,7 +9,7 @@ class Users::JoinsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    user = users(:david)
+    user = users.david
     sign_in_as user
 
     assert_no_difference -> { User.count } do

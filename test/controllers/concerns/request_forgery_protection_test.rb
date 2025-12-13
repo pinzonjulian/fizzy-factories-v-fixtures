@@ -81,13 +81,13 @@ class RequestForgeryProtectionTest < ActionDispatch::IntegrationTest
   end
 
   test "GET requests succeed regardless of Sec-Fetch-Site header" do
-    get board_path(boards(:writebook)), headers: { "Sec-Fetch-Site" => "cross-site" }
+    get board_path(boards.writebook), headers: { "Sec-Fetch-Site" => "cross-site" }
 
     assert_response :success
   end
 
   test "appends Sec-Fetch-Site to Vary header on GET requests" do
-    get board_path(boards(:writebook))
+    get board_path(boards.writebook)
 
     assert_response :success
     assert_includes response.headers["Vary"], "Sec-Fetch-Site"

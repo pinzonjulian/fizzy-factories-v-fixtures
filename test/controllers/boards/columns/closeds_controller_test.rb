@@ -6,7 +6,7 @@ class Boards::Columns::ClosedsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show" do
-    get board_columns_closed_path(boards(:writebook))
+    get board_columns_closed_path(boards.writebook)
     assert_response :success
   end
 end

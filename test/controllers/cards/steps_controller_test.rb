@@ -6,7 +6,7 @@ class Cards::StepsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    card = cards(:logo)
+    card = cards.logo
 
     assert_difference -> { card.steps.count }, +1 do
       post card_steps_path(card), params: { step: { content: "Research alternatives" } }, as: :turbo_stream
@@ -17,7 +17,7 @@ class Cards::StepsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update" do
-    card = cards(:logo)
+    card = cards.logo
     step = card.steps.create!(content: "Original content")
 
     assert_changes -> { step.reload.content }, from: "Original content", to: "Updated content" do
@@ -27,7 +27,7 @@ class Cards::StepsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy" do
-    card = cards(:logo)
+    card = cards.logo
     step = card.steps.create!(content: "Step to delete")
 
     assert_difference -> { card.steps.count }, -1 do
@@ -37,7 +37,7 @@ class Cards::StepsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "toggle completion" do
-    card = cards(:logo)
+    card = cards.logo
     step = card.steps.create!(content: "Test step", completed: false)
 
     # Toggle to completed

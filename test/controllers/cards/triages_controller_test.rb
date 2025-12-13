@@ -6,9 +6,9 @@ class Cards::TriagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    card = cards(:logo)
+    card = cards.logo
     original_column = card.column
-    column = columns(:writebook_in_progress)
+    column = columns.writebook_in_progress
 
     assert_changes -> { card.reload.column }, from: original_column, to: column do
       post card_triage_path(card, column_id: column.id)
@@ -17,7 +17,7 @@ class Cards::TriagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy" do
-    card = cards(:shipping)
+    card = cards.shipping
 
     assert_changes -> { card.reload.column }, to: nil do
       delete card_triage_path(card), as: :turbo_stream

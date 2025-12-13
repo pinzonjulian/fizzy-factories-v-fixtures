@@ -3,7 +3,7 @@ require "test_helper"
 class Boards::PublicationsControllerTest < ActionDispatch::IntegrationTest
   setup do
     sign_in_as :kevin
-    @board = boards(:writebook)
+    @board = boards.writebook
   end
 
   test "publish a board" do

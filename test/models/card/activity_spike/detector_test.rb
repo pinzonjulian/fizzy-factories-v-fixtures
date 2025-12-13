@@ -4,8 +4,8 @@ class Card::ActivitySpike::DetectorTest < ActiveSupport::TestCase
   include CardActivityTestHelper
 
   setup do
-    Current.session = sessions(:david)
-    @card = cards(:logo)
+    Current.session = sessions.david
+    @card = cards.logo
   end
 
   test "detect multiple people commenting" do
@@ -16,13 +16,13 @@ class Card::ActivitySpike::DetectorTest < ActiveSupport::TestCase
 
   test "detect assignments" do
     assert_activity_spike_detected do
-      @card.toggle_assignment users(:kevin)
+      @card.toggle_assignment users.kevin
     end
   end
 
   test "detect reopened cards" do
-    assert_activity_spike_detected(card: cards(:shipping)) do
-      cards(:shipping).reopen
+    assert_activity_spike_detected(card: cards.shipping) do
+      cards.shipping.reopen
     end
   end
 

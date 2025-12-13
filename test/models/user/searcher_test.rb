@@ -2,7 +2,7 @@ require "test_helper"
 
 class User::SearcherTest < ActiveSupport::TestCase
   setup do
-    @user = users(:kevin)
+    @user = users.kevin
   end
 
   test "remember the last search" do

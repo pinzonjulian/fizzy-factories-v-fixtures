@@ -2,22 +2,22 @@ require "test_helper"
 
 class Card::Eventable::SystemCommenterTest < ActiveSupport::TestCase
   setup do
-    Current.session = sessions(:david)
-    @card = cards(:text)
+    Current.session = sessions.david
+    @card = cards.text
   end
 
   test "card_assigned" do
     assert_system_comment "David assigned this to Kevin" do
-      @card.toggle_assignment users(:kevin)
+      @card.toggle_assignment users.kevin
     end
   end
 
   test "card_unassigned" do
-    @card.toggle_assignment users(:kevin)
+    @card.toggle_assignment users.kevin
     @card.comments.destroy_all # To skip deduplication logic
 
     assert_system_comment "David unassigned from Kevin" do
-      @card.toggle_assignment users(:kevin)
+      @card.toggle_assignment users.kevin
     end
   end
 
@@ -34,10 +34,10 @@ class Card::Eventable::SystemCommenterTest < ActiveSupport::TestCase
   end
 
   test "don't notify on system comments" do
-    @card.watch_by(users(:david))
+    @card.watch_by(users.david)
 
     assert_no_difference -> { Notification.count } do
-      @card.toggle_assignment users(:kevin)
+      @card.toggle_assignment users.kevin
     end
   end
 

@@ -2,13 +2,13 @@ require "test_helper"
 
 class User::NotifiableTest < ActiveSupport::TestCase
   setup do
-    @user = users(:david)
+    @user = users.david
     @user.settings.bundle_email_every_few_hours!
   end
 
   test "bundle method creates new bundle for first notification" do
     notification = assert_difference -> { @user.notification_bundles.count }, 1 do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
 
     bundle = @user.notification_bundles.last
@@ -17,10 +17,10 @@ class User::NotifiableTest < ActiveSupport::TestCase
   end
 
   test "bundle method finds existing bundle within aggregation period" do
-    @user.notifications.create!(source: events(:logo_published), creator: @user)
+    @user.notifications.create!(source: events.logo_published, creator: @user)
 
     assert_no_difference -> { @user.notification_bundles.count } do
-      @user.notifications.create!(source: events(:logo_published), creator: @user)
+      @user.notifications.create!(source: events.logo_published, creator: @user)
     end
   end
 end

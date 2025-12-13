@@ -1,4 +1,4 @@
-37s:
+ 37s:
   id: <%= ActiveRecord::FixtureSet.identify("37s", :uuid) %>
   name: 37signals
   external_account_id: <%= ActiveRecord::FixtureSet.identify("37signals") %>

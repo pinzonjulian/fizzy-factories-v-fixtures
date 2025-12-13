@@ -1,5 +1,5 @@
 module CardActivityTestHelper
-  def multiple_people_comment_on(card, times: 4, people: users(:david, :kevin, :jz))
+  def multiple_people_comment_on(card, times: 4, people: [users.david, users.kevin, users.jz])
     perform_enqueued_jobs only: Card::ActivitySpike::DetectionJob do
       times.times do |index|
         creator = people[index % people.size]

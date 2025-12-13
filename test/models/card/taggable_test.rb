@@ -2,7 +2,7 @@ require "test_helper"
 
 class Card::TaggableTest < ActiveSupport::TestCase
   setup do
-    @card = cards(:logo)
+    @card = cards.logo
   end
 
   test "toggle tag" do
@@ -19,10 +19,10 @@ class Card::TaggableTest < ActiveSupport::TestCase
 
   test "scope tags by account" do
     assert_difference -> { Tag.count }, 2 do
-      cards(:logo).toggle_tag_with "ruby"
-      cards(:paycheck).toggle_tag_with "ruby"
+      cards.logo.toggle_tag_with "ruby"
+      cards.paycheck.toggle_tag_with "ruby"
     end
 
-    assert_not_equal cards(:logo).tags.last, cards(:paycheck).tags.last
+    assert_not_equal cards.logo.tags.last, cards.paycheck.tags.last
   end
 end

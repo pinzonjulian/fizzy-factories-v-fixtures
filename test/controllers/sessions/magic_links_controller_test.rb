@@ -10,7 +10,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with sign in code" do
-    identity = identities(:kevin)
+    identity = identities.kevin
     magic_link = MagicLink.create!(identity: identity)
 
     untenanted do
@@ -24,7 +24,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with sign up code" do
-    identity = identities(:kevin)
+    identity = identities.kevin
     magic_link = MagicLink.create!(identity: identity, purpose: :sign_up)
 
     untenanted do
@@ -38,7 +38,7 @@ class Sessions::MagicLinksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with invalid code" do
-    identity = identities(:kevin)
+    identity = identities.kevin
     magic_link = MagicLink.create!(identity: identity)
 
     untenanted do

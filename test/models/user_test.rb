@@ -3,29 +3,29 @@ require "test_helper"
 class UserTest < ActiveSupport::TestCase
   test "create" do
     user = User.create!(
-      account: accounts("37s"),
+      account: accounts._37s,
       role: "member",
       name: "Victor Cooper"
     )
 
-    assert_equal [ boards(:writebook) ], user.boards
+    assert_equal [ boards.writebook ], user.boards
     assert user.settings.present?
   end
 
   test "creation gives access to all_access boards" do
     user = User.create!(
-      account: accounts("37s"),
+      account: accounts._37s,
       role: "member",
       name: "Victor Cooper"
     )
 
-    assert_equal [ boards(:writebook) ], user.boards
+    assert_equal [ boards.writebook ], user.boards
   end
 
   test "deactivate" do
-    assert_changes -> { users(:jz).active? }, from: true, to: false do
-      assert_changes -> { users(:jz).accesses.count }, from: 1, to: 0 do
-        users(:jz).tap do |user|
+    assert_changes -> { users.jz.active? }, from: true, to: false do
+      assert_changes -> { users.jz.accesses.count }, from: 1, to: 0 do
+        users.jz.tap do |user|
           user.stubs(:close_remote_connections).once
           user.deactivate
         end
@@ -40,7 +40,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "setup?" do
-    user = users(:kevin)
+    user = users.kevin
 
     user.update!(name: user.identity.email_address)
     assert_not user.setup?
@@ -50,21 +50,21 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "verified? returns true when verified_at is present" do
-    user = users(:david)
+    user = users.david
     user.update_column(:verified_at, Time.current)
 
     assert user.verified?
   end
 
   test "verified? returns false when verified_at is nil" do
-    user = users(:david)
+    user = users.david
     user.update_column(:verified_at, nil)
 
     assert_not user.verified?
   end
 
   test "verify sets verified_at when not already verified" do
-    user = users(:david)
+    user = users.david
     user.update_column(:verified_at, nil)
 
     assert_nil user.verified_at
@@ -73,7 +73,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "verify does not update verified_at when already verified" do
-    user = users(:david)
+    user = users.david
     original_time = 1.day.ago
     user.update_column(:verified_at, original_time)
 

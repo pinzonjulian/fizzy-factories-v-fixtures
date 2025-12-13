@@ -8,16 +8,16 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "create" do
-    webhook = webhooks(:active)
-    event = events(:layout_commented)
+    webhook = webhooks.active
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     assert_equal "pending", delivery.state
   end
 
   test "succeeded" do
-    webhook = webhooks(:active)
-    event = events(:layout_commented)
+    webhook = webhooks.active
+    event = events.layout_commented
     delivery = Webhook::Delivery.new(
       webhook: webhook,
       event: event,
@@ -46,7 +46,7 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "deliver_later" do
-    delivery = webhook_deliveries(:pending)
+    delivery = webhook_deliveries.pending
 
     assert_enqueued_with job: Webhook::DeliveryJob, args: [ delivery ] do
       delivery.deliver_later
@@ -54,7 +54,7 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "deliver" do
-    delivery = webhook_deliveries(:pending)
+    delivery = webhook_deliveries.pending
 
     stub_request(:post, delivery.webhook.url)
       .to_return(status: 200, headers: { "content-type" => "application/json" })
@@ -77,7 +77,7 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "deliver when the network timeouts" do
-    delivery = webhook_deliveries(:pending)
+    delivery = webhook_deliveries.pending
     stub_request(:post, delivery.webhook.url).to_timeout
 
     tracker = delivery.webhook.delinquency_tracker
@@ -91,7 +91,7 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "deliver when the connection is refused" do
-    delivery = webhook_deliveries(:pending)
+    delivery = webhook_deliveries.pending
     stub_request(:post, delivery.webhook.url).to_raise(Errno::ECONNREFUSED)
 
     delivery.deliver
@@ -101,7 +101,7 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "deliver when an SSL error occurs" do
-    delivery = webhook_deliveries(:pending)
+    delivery = webhook_deliveries.pending
     stub_request(:post, delivery.webhook.url).to_raise(OpenSSL::SSL::SSLError)
 
     delivery.deliver
@@ -111,7 +111,7 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "deliver when an unexpected error occurs" do
-    delivery = webhook_deliveries(:pending)
+    delivery = webhook_deliveries.pending
     stub_request(:post, delivery.webhook.url).to_raise(StandardError, "Unexpected error")
 
     assert_raises(StandardError) do
@@ -123,11 +123,11 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "deliver with basecamp webhook format" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Basecamp",
       url: "https://3.basecamp.com/123/integrations/webhook/buckets/456/chats/789/lines"
     )
-    event = events(:layout_commented)
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     request_stub = stub_request(:post, webhook.url)
@@ -146,11 +146,11 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "deliver with campfire webhook format" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Campfire",
       url: "https://example.com/rooms/123/456-room-name/messages"
     )
-    event = events(:layout_commented)
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     request_stub = stub_request(:post, webhook.url)
@@ -168,11 +168,11 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "deliver with slack webhook format" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Slack",
       url: "https://hooks.slack.com/services/T12345678/B12345678/abcdefghijklmnopqrstuvwx" # gitleaks:allow
     )
-    event = events(:layout_commented)
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     request_stub = stub_request(:post, webhook.url)
@@ -191,11 +191,11 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "deliver with generic webhook format" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Generic",
       url: "https://example.com/webhook"
     )
-    event = events(:layout_commented)
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     request_stub = stub_request(:post, webhook.url)
@@ -213,8 +213,8 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
   end
 
   test "cleanup" do
-    webhook = webhooks(:active)
-    event = events(:layout_commented)
+    webhook = webhooks.active
+    event = events.layout_commented
 
     fresh_delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
     stale_delivery = Webhook::Delivery.create!(webhook: webhook, event: event, created_at: 8.days.ago)
@@ -227,14 +227,14 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "renders the creator name when event creator is current user" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Basecamp",
       url: "https://3.basecamp.com/123/integrations/webhook/buckets/456/chats/789/lines"
     )
-    event = events(:logo_published)
+    event = events.logo_published
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
-    Current.session = sessions(:david)
+    Current.session = sessions.david
 
     request_stub = stub_request(:post, webhook.url)
       .with { |request| CGI.parse(request.body)["content"].first.include?("David added") }
@@ -247,14 +247,14 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "renders creator name when event creator is not current user" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Basecamp",
       url: "https://3.basecamp.com/123/integrations/webhook/buckets/456/chats/789/lines"
     )
-    event = events(:logo_published)
+    event = events.logo_published
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
-    Current.session = sessions(:kevin)
+    Current.session = sessions.kevin
 
     request_stub = stub_request(:post, webhook.url)
       .with { |request| CGI.parse(request.body)["content"].first.include?("David added") }
@@ -267,11 +267,11 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "blocks DNS rebinding attack where hostname resolves to private IP after validation" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Rebind Attack",
       url: "https://rebind.attacker.example/webhook"
     )
-    event = events(:layout_commented)
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     # Stub DNS to return a private IP (simulating rebind to internal host)
@@ -286,11 +286,11 @@ class Webhook::DeliveryTest < ActiveSupport::TestCase
 
   test "connects to the pinned IP address preventing DNS re-resolution" do
     webhook = Webhook.create!(
-      board: boards(:writebook),
+      board: boards.writebook,
       name: "Pinned IP",
       url: "https://example.com/webhook"
     )
-    event = events(:layout_commented)
+    event = events.layout_commented
     delivery = Webhook::Delivery.create!(webhook: webhook, event: event)
 
     stub_dns_resolution(PUBLIC_TEST_IP)

@@ -2,7 +2,7 @@ require "test_helper"
 
 class Board::CardsTest < ActiveSupport::TestCase
   test "touch cards when the name changes" do
-    board = boards(:writebook)
+    board = boards.writebook
 
     assert_changes -> { board.cards.first.updated_at } do
       board.update!(name: "New Name")

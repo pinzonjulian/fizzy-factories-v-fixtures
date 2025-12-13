@@ -2,7 +2,7 @@ require "test_helper"
 
 class Sessions::MenusControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @identity = identities(:kevin)
+    @identity = identities.kevin
   end
 
   test "show with no account" do

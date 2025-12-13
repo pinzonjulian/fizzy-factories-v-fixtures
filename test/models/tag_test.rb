@@ -11,8 +11,8 @@ class TagTest < ActiveSupport::TestCase
     unused_tags = Tag.unused
 
     assert_includes unused_tags, unused
-    assert_not_includes unused_tags, tags(:web)
-    assert_not_includes unused_tags, tags(:mobile)
+    assert_not_includes unused_tags, tags.web
+    assert_not_includes unused_tags, tags.mobile
   end
 
   test ".unused returns empty relation if all tags are used" do

@@ -5,7 +5,7 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as :kevin
     travel_to Time.utc(2025, 1, 22, 17, 30, 0)
 
-    events(:layout_assignment_jz).update!(created_at: Time.current.beginning_of_day + 8.hours)
+    events.layout_assignment_jz.update!(created_at: Time.current.beginning_of_day + 8.hours)
   end
 
   test "index" do
@@ -27,14 +27,14 @@ class EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "only displays events from filtered boards" do
-    get events_path(board_ids: [ boards(:writebook).id ])
+    get events_path(board_ids: [ boards.writebook.id ])
     assert_response :success
 
     events_shown = css_select(".event").count
     assert events_shown > 0, "Should show some events"
 
     css_select(".event").each do |event|
-      assert_includes event.text, boards(:writebook).name
+      assert_includes event.text, boards.writebook.name
     end
   end
 end

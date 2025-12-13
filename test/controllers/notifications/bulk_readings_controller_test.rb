@@ -6,8 +6,8 @@ class Notifications::BulkReadingsControllerTest < ActionDispatch::IntegrationTes
   end
 
   test "create marks all notifications as read" do
-    assert_changes -> { notifications(:logo_published_kevin).reload.read? }, from: false, to: true do
-      assert_changes -> { notifications(:layout_commented_kevin).reload.read? }, from: false, to: true do
+    assert_changes -> { notifications.logo_published_kevin.reload.read? }, from: false, to: true do
+      assert_changes -> { notifications.layout_commented_kevin.reload.read? }, from: false, to: true do
         post bulk_reading_path
       end
     end

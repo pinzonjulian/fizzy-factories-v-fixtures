@@ -6,8 +6,8 @@ class Cards::BoardsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update changes card board" do
-    card = cards(:logo)
-    new_board = boards(:private)
+    card = cards.logo
+    new_board = boards.private
 
     assert_not_equal new_board, card.board
 

@@ -2,7 +2,7 @@ require "test_helper"
 
 class Users::EmailAddresses::ConfirmationsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = users(:david)
+    @user = users.david
     @old_email = @user.identity.email_address
     @new_email = "newemail@example.com"
     @token = @user.send(:generate_email_address_change_token, to: @new_email)

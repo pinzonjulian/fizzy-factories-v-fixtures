@@ -2,7 +2,7 @@ require "test_helper"
 
 class Column::PositionedTest < ActiveSupport::TestCase
   test "auto position new columns" do
-    board = boards(:writebook)
+    board = boards.writebook
     max_position = board.columns.maximum(:position)
 
     new_column = board.columns.create!(name: "New Column", color: "#000000")
@@ -11,7 +11,7 @@ class Column::PositionedTest < ActiveSupport::TestCase
   end
 
   test "move column to the left" do
-    board = boards(:writebook)
+    board = boards.writebook
     columns = board.columns.sorted.to_a
 
     column_a = columns[0]
@@ -26,7 +26,7 @@ class Column::PositionedTest < ActiveSupport::TestCase
   end
 
   test "move left when already at leftmost position" do
-    board = boards(:writebook)
+    board = boards.writebook
     leftmost_column = board.columns.sorted.first
     original_position = leftmost_column.position
 
@@ -36,7 +36,7 @@ class Column::PositionedTest < ActiveSupport::TestCase
   end
 
   test "move column to the right" do
-    board = boards(:writebook)
+    board = boards.writebook
     columns = board.columns.sorted.to_a
 
     column_a = columns[0]
@@ -51,7 +51,7 @@ class Column::PositionedTest < ActiveSupport::TestCase
   end
 
   test "move right when already at rightmost position" do
-    board = boards(:writebook)
+    board = boards.writebook
     rightmost_column = board.columns.sorted.last
     original_position = rightmost_column.position
 

@@ -2,7 +2,7 @@ require "test_helper"
 
 class Notification::BundleMailerTest < ActionMailer::TestCase
   setup do
-    @user = users(:david)
+    @user = users.david
 
     @bundle = Notification::Bundle.create!(
       user: @user,
@@ -39,6 +39,6 @@ class Notification::BundleMailerTest < ActionMailer::TestCase
 
   private
     def create_notification(user)
-      Notification.create!(user: user, creator: user, source: events(:logo_published), created_at: 30.minutes.ago)
+      Notification.create!(user: user, creator: user, source: events.logo_published, created_at: 30.minutes.ago)
     end
 end

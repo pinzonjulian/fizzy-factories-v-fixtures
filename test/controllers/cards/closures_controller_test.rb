@@ -6,7 +6,7 @@ class Cards::ClosuresControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    card = cards(:logo)
+    card = cards.logo
 
     assert_changes -> { card.reload.closed? }, from: false, to: true do
       post card_closure_path(card)
@@ -15,7 +15,7 @@ class Cards::ClosuresControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy" do
-    card = cards(:shipping)
+    card = cards.shipping
 
     assert_changes -> { card.reload.closed? }, from: true, to: false do
       delete card_closure_path(card)

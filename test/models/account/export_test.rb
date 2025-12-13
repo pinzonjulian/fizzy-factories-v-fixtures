@@ -2,7 +2,7 @@ require "test_helper"
 
 class Account::ExportTest < ActiveSupport::TestCase
   test "build_later enqueues ExportAccountDataJob" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: Current.account, user: users.david)
 
     assert_enqueued_with(job: ExportAccountDataJob, args: [ export ]) do
       export.build_later
@@ -10,7 +10,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build generates zip with card JSON files" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: Current.account, user: users.david)
 
     export.build
 
@@ -20,7 +20,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build sets status to processing then completed" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: Current.account, user: users.david)
 
     export.build
 
@@ -29,7 +29,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build sends email when completed" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: Current.account, user: users.david)
 
     assert_enqueued_jobs 1, only: ActionMailer::MailDeliveryJob do
       export.build
@@ -37,7 +37,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build sets status to failed on error" do
-    export = Account::Export.create!(account: Current.account, user: users(:david))
+    export = Account::Export.create!(account: Current.account, user: users.david)
     export.stubs(:generate_zip).raises(StandardError.new("Test error"))
 
     assert_raises(StandardError) do
@@ -48,9 +48,9 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "cleanup deletes exports completed more than 24 hours ago" do
-    old_export = Account::Export.create!(account: Current.account, user: users(:david), status: :completed, completed_at: 25.hours.ago)
-    recent_export = Account::Export.create!(account: Current.account, user: users(:david), status: :completed, completed_at: 23.hours.ago)
-    pending_export = Account::Export.create!(account: Current.account, user: users(:david), status: :pending)
+    old_export = Account::Export.create!(account: Current.account, user: users.david, status: :completed, completed_at: 25.hours.ago)
+    recent_export = Account::Export.create!(account: Current.account, user: users.david, status: :completed, completed_at: 23.hours.ago)
+    pending_export = Account::Export.create!(account: Current.account, user: users.david, status: :pending)
 
     Account::Export.cleanup
 
@@ -60,7 +60,7 @@ class Account::ExportTest < ActiveSupport::TestCase
   end
 
   test "build includes only accessible cards for user" do
-    user = users(:david)
+    user = users.david
     export = Account::Export.create!(account: Current.account, user: user)
 
     export.build

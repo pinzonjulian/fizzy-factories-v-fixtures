@@ -6,7 +6,7 @@ class Columns::LeftPositionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "move column left" do
-    board = boards(:writebook)
+    board = boards.writebook
     columns = board.columns.sorted.to_a
 
     column_a = columns[0]
@@ -22,13 +22,13 @@ class Columns::LeftPositionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "users can only reorder columns in boards they have access to" do
-    column = columns(:writebook_in_progress)
+    column = columns.writebook_in_progress
 
     post column_left_position_path(column), as: :turbo_stream
     assert_response :success
 
-    boards(:writebook).update! all_access: false
-    boards(:writebook).accesses.revoke_from users(:kevin)
+    boards.writebook.update! all_access: false
+    boards.writebook.accesses.revoke_from users.kevin
 
     post column_left_position_path(column), as: :turbo_stream
     assert_response :not_found

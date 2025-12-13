@@ -4,8 +4,8 @@ module ApplicationCable
   class ConnectionTest < ActionCable::Connection::TestCase
     setup do
       # Use non-37s account to assess that Current.account is set correctly
-      @account = accounts(:initech)
-      @session = sessions(:mike)
+      @account = accounts.initech
+      @session = sessions.mike
     end
 
     test "connects with valid session and account info" do
@@ -13,7 +13,7 @@ module ApplicationCable
 
       connect "/cable", env: { "fizzy.external_account_id" => @account.external_account_id }
 
-      assert_equal users(:mike), connection.current_user
+      assert_equal users.mike, connection.current_user
       assert_equal @account, Current.account
     end
 

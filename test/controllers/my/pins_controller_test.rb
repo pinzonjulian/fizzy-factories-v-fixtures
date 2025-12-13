@@ -9,6 +9,6 @@ class My::PinsControllerTest < ActionDispatch::IntegrationTest
     get my_pins_path
 
     assert_response :success
-    assert_select "div", text: /#{users(:kevin).pins.first.card.title}/
+    assert_select "div", text: /#{users.kevin.pins.first.card.title}/
   end
 end
