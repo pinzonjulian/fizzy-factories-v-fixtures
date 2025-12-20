@@ -9,7 +9,7 @@ class Cards::WatchesControllerTest < ActionDispatch::IntegrationTest
     cards.logo.unwatch_by users.kevin
 
     assert_changes -> { cards.logo.watched_by?(users.kevin) }, from: false, to: true do
-      post card_watch_path(cards.logo)
+      post card_watch_path(cards.logo), as: :turbo_stream
     end
   end
 
@@ -17,7 +17,7 @@ class Cards::WatchesControllerTest < ActionDispatch::IntegrationTest
     cards.logo.watch_by users.kevin
 
     assert_changes -> { cards.logo.watched_by?(users.kevin) }, from: true, to: false do
-      delete card_watch_path(cards.logo)
+      delete card_watch_path(cards.logo), as: :turbo_stream
     end
   end
 end
