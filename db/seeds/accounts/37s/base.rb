@@ -31,11 +31,12 @@ Current.set(account:) do
   sessions.create(:kevin, identity: identities.kevin)
   sessions.create(:mike,  identity: identities.mike)
 
-  # User settings
-  user_settings.create(:david_settings,  user: users.david,  account:, bundle_email_frequency: :never)
-  user_settings.create(:jz_settings,     user: users.jz,     account:, bundle_email_frequency: :never)
-  user_settings.create(:kevin_settings,  user: users.kevin,  account:, bundle_email_frequency: :never)
-  user_settings.create(:system_settings, user: users.system, account:, bundle_email_frequency: :never)
+  # User settings - update the auto-created settings instead of creating duplicates
+  # (User after_create callback creates settings with default :every_few_hours)
+  users.david.settings.update!(bundle_email_frequency: :never)
+  users.jz.settings.update!(bundle_email_frequency: :never)
+  users.kevin.settings.update!(bundle_email_frequency: :never)
+  # system user doesn't have settings (after_create callback skips for system?)
 
   # Account exports
   account_exports.create(:pending_export,   account:, user: users.david, status: :pending)

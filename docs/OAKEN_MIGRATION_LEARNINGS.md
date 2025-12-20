@@ -117,6 +117,31 @@ filter.tags << tag
 filter.assignees << user
 ```
 
+### Accessors vs Local Variables: Cached Association Gotcha
+
+When a model has `after_create` callbacks that create associated records (like `has_one :settings`), there's a subtle but critical difference between using local variables and Oaken accessors in seeds.
+
+**The problem:** When you create a record with a local variable, Rails caches the callback-created association on that object. If you later create a "replacement" record using `user_settings.create(user: local_var, ...)`, Rails updates the cached association to point to the new record. But Oaken accessors (`users.david`) fetch a **fresh instance** from the database each time—with no cached association. When `users.david.settings` is called, it queries the DB and returns the **first record by ID** (usually the callback-created one with default values).
+
+```ruby
+# User model has: after_create :create_settings (creates settings with default :every_few_hours)
+
+# ❌ WRONG - creates duplicate settings, accessor returns the wrong one
+users.create(:david, name: "David", ...)  # callback creates settings with :every_few_hours
+user_settings.create(:david_settings, user: users.david, bundle_email_frequency: :never)
+# Now David has TWO settings records!
+# users.david.settings returns the first by ID (the :every_few_hours one)
+
+# ✅ CORRECT - update the auto-created settings instead
+users.create(:david, name: "David", ...)
+users.david.settings.update!(bundle_email_frequency: :never)
+# Only ONE settings record, correctly set to :never
+```
+
+**Why this matters:** Other callbacks (like `Notification#after_create :bundle`) may check `user.settings.bundling_emails?`. If the accessor returns the wrong settings record, you get unexpected bundles created during seeding, causing test failures.
+
+**Rule of thumb:** When callbacks auto-create `has_one` associations, **update** the auto-created record instead of creating a new one.
+
 ---
 
 ## Test Adjustments Required
