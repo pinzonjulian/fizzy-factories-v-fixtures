@@ -229,6 +229,85 @@ end
 
 ---
 
+## Non-Transactional Tests: Fixture Pollution
+
+When tests disable transactional rollback (`use_transactional_tests = false`), special care is needed to avoid polluting other tests.
+
+### The Problem
+
+Some tests (like search tests) must disable transactions because they need to test behavior across commits. When these tests create records on **fixture/seed data** instead of isolated test data, those records persist and pollute subsequent tests.
+
+```ruby
+module SearchTestHelper
+  extend ActiveSupport::Concern
+
+  included do
+    self.use_transactional_tests = false  # Changes are COMMITTED, not rolled back!
+    
+    setup :setup_search_test
+    teardown :teardown_search_test
+  end
+
+  def setup_search_test
+    # Creates isolated @account, @user, @board for this test
+    @account = Account.create!(name: "Search Test", ...)
+    @user = User.create!(name: "Test User", account: @account, ...)
+    @board = Board.create!(name: "Test Board", account: @account, ...)
+  end
+
+  def teardown_search_test
+    # Only cleans up @account - NOT fixture data!
+    Account.find_by(name: "Search Test")&.destroy
+  end
+end
+```
+
+### ❌ WRONG - Creates Records on Fixtures
+
+```ruby
+class Filter::SearchTest < ActiveSupport::TestCase
+  include SearchTestHelper
+
+  test "deduplicate multiple results" do
+    # Creates card on FIXTURE board - never cleaned up!
+    card = boards.writebook.cards.create!(title: "Test", creator: users.david)
+    # ...
+  end
+end
+```
+
+This card persists after the test because:
+1. `use_transactional_tests = false` means no rollback
+2. Teardown only destroys the "Search Test" account, not `boards.writebook`
+3. Other tests querying `accounts._37s.cards` find unexpected records
+
+### ✅ CORRECT - Use Instance Variables
+
+```ruby
+class Filter::SearchTest < ActiveSupport::TestCase
+  include SearchTestHelper
+
+  test "deduplicate multiple results" do
+    # Creates card on ISOLATED test board - cleaned up in teardown!
+    card = @board.cards.create!(title: "Test", creator: @user)
+    # ...
+  end
+end
+```
+
+### Symptoms of Fixture Pollution
+
+- Tests pass individually but fail when run with the full suite
+- Failures depend on `--seed` value (test ordering)
+- Error messages show unexpected records with titles like "Duplicate results test"
+- Set comparisons fail with extra elements
+
+### Rule of Thumb
+
+**In non-transactional tests, NEVER reference fixtures/seeds.** Always use instance variables created in setup that will be cleaned up in teardown.
+
+---
+
 ## Migration Checklist
 
 - [ ] Add `oaken` gem to Gemfile
